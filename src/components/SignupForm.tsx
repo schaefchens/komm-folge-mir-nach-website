@@ -7,8 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
 
 const SignupForm = () => {
-  // Only SMS is available
-  const contactMethod = "sms";
   const [contact, setContact] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
