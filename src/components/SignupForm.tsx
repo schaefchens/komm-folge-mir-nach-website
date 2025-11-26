@@ -3,12 +3,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle, Send, MessageSquare, ArrowRight } from "lucide-react";
+import { MessageSquare, ArrowRight } from "lucide-react";
 
 const SignupForm = () => {
-  const [contactMethod, setContactMethod] = useState<"whatsapp" | "telegram" | "sms">("whatsapp");
+  // Only SMS is available
+  const contactMethod = "sms";
   const [contact, setContact] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -17,21 +17,32 @@ const SignupForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const methodNames = {
-      whatsapp: "WhatsApp",
-      telegram: "Telegram",
-      sms: "SMS"
-    };
-    
-    toast({
-      title: "Willkommen in der Gemeinschaft!",
-      description: `Wir haben dir eine Nachricht per ${methodNames[contactMethod]} an ${contact} gesendet mit einem Link zur Community.`,
-    });
-
-    setContact("");
+    try {
+      const response = await fetch(
+        `https://komm-folge-mir-nach.de/join.php?to=sms&mobile=${encodeURIComponent(contact)}`,
+        { method: "GET" }
+      );
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: "Erfolg!",
+          description: data.message || `Wir haben dir eine SMS an ${contact} gesendet mit einem Link zur Community.`,
+        });
+        setContact("");
+      } else {
+        toast({
+          title: "Fehler",
+          description: data.message || "Es gab ein Problem beim Versenden der SMS.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Es gab ein Problem beim Versenden der SMS.",
+        variant: "destructive"
+      });
+    }
     setIsSubmitting(false);
   };
 
@@ -83,50 +94,12 @@ const SignupForm = () => {
                   <Label className="text-lg md:text-xl font-semibold text-foreground">
                     Wie möchtest du kontaktiert werden?
                   </Label>
-                  <RadioGroup
-                    value={contactMethod}
-                    onValueChange={(value) => setContactMethod(value as "whatsapp" | "telegram" | "sms")}
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-                  >
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <RadioGroupItem value="whatsapp" id="whatsapp" className="peer sr-only" />
-                      <Label
-                        htmlFor="whatsapp"
-                        className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-border bg-background/50 p-8 hover:bg-accent/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-gradient-hero peer-data-[state=checked]:shadow-elegant cursor-pointer transition-all duration-300"
-                      >
-                        <div className="w-14 h-14 rounded-xl bg-gradient-warm flex items-center justify-center shadow-soft">
-                          <MessageCircle className="w-7 h-7 text-white" strokeWidth={2} />
-                        </div>
-                        <span className="font-semibold text-lg">WhatsApp</span>
-                      </Label>
-                    </motion.div>
-                    
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <RadioGroupItem value="telegram" id="telegram" className="peer sr-only" />
-                      <Label
-                        htmlFor="telegram"
-                        className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-border bg-background/50 p-8 hover:bg-accent/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-gradient-hero peer-data-[state=checked]:shadow-elegant cursor-pointer transition-all duration-300"
-                      >
-                        <div className="w-14 h-14 rounded-xl bg-gradient-warm flex items-center justify-center shadow-soft">
-                          <Send className="w-7 h-7 text-white" strokeWidth={2} />
-                        </div>
-                        <span className="font-semibold text-lg">Telegram</span>
-                      </Label>
-                    </motion.div>
-
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <RadioGroupItem value="sms" id="sms" className="peer sr-only" />
-                      <Label
-                        htmlFor="sms"
-                        className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-border bg-background/50 p-8 hover:bg-accent/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-gradient-hero peer-data-[state=checked]:shadow-elegant cursor-pointer transition-all duration-300"
-                      >
-                        <div className="w-14 h-14 rounded-xl bg-gradient-warm flex items-center justify-center shadow-soft">
-                          <MessageSquare className="w-7 h-7 text-white" strokeWidth={2} />
-                        </div>
-                        <span className="font-semibold text-lg">SMS</span>
-                      </Label>
-                    </motion.div>
-                  </RadioGroup>
+                  <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-border bg-background/50 p-8">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-warm flex items-center justify-center shadow-soft">
+                      <MessageSquare className="w-7 h-7 text-white" strokeWidth={2} />
+                    </div>
+                    <span className="font-semibold text-lg">SMS</span>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
