@@ -93,6 +93,17 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
     }
   }, [open]);
 
+  // Auto-reveal choices after 3 seconds
+  useEffect(() => {
+    if (!open || showChoices || isAnswered || showIntro) return;
+
+    const autoRevealTimer = setTimeout(() => {
+      revealChoices();
+    }, 3000);
+
+    return () => clearTimeout(autoRevealTimer);
+  }, [open, showChoices, isAnswered, showIntro, currentQuestionIndex]);
+
   // Timer logic
   useEffect(() => {
     if (!open || !showChoices || isAnswered) return;
