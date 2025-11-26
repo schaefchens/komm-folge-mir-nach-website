@@ -19,6 +19,7 @@ interface QuestionnaireProps {
 
 const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [showIntro, setShowIntro] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showChoices, setShowChoices] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
@@ -32,26 +33,58 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
       const mockQuestions: Question[] = [
         {
           id: "q1",
-          title: "Hast du schon einmal in der Bibel gelesen?",
-          choices: ["Ja, regelmäßig", "Ja, gelegentlich", "Nein, noch nie"]
+          title: "Wer führte das Volk Israel aus Ägypten?",
+          choices: ["Mose", "Abraham", "David"]
         },
         {
           id: "q2",
-          title: "Glaubst du an Gott?",
-          choices: ["Ja, fest", "Ich bin unsicher", "Nein"]
+          title: "In welcher Stadt wurde Jesus geboren?",
+          choices: ["Bethlehem", "Nazareth", "Jerusalem"]
         },
         {
           id: "q3",
-          title: "Was bedeutet Nachfolge Jesu für dich?",
-          choices: [
-            "Jesus als Vorbild im Leben folgen",
-            "Teil einer Gemeinschaft sein",
-            "Ich weiß es nicht genau"
-          ]
+          title: "Wie viele Jünger hatte Jesus?",
+          choices: ["12", "7", "10"]
+        },
+        {
+          id: "q4",
+          title: "Wer verriet Jesus?",
+          choices: ["Judas", "Petrus", "Thomas"]
+        },
+        {
+          id: "q5",
+          title: "Was bedeutet das Wort 'Evangelium'?",
+          choices: ["Gute Nachricht", "Heilige Schrift", "Gottes Wort"]
+        },
+        {
+          id: "q6",
+          title: "Welches ist das erste Buch der Bibel?",
+          choices: ["Genesis", "Exodus", "Matthäus"]
+        },
+        {
+          id: "q7",
+          title: "Was ist das größte Gebot laut Jesus?",
+          choices: ["Gott und den Nächsten lieben", "Nicht töten", "Nicht stehlen"]
+        },
+        {
+          id: "q8",
+          title: "Wer schrieb die meisten Briefe im Neuen Testament?",
+          choices: ["Paulus", "Petrus", "Johannes"]
+        },
+        {
+          id: "q9",
+          title: "Was bedeutet Nachfolge Jesu?",
+          choices: ["Sein Leben nach Jesu Lehren ausrichten", "In die Kirche gehen", "Die Bibel besitzen"]
+        },
+        {
+          id: "q10",
+          title: "Was geschah am dritten Tag nach Jesu Kreuzigung?",
+          choices: ["Seine Auferstehung", "Seine Himmelfahrt", "Pfingsten"]
         }
       ];
 
       setQuestions(mockQuestions);
+      setShowIntro(true);
       setCurrentQuestionIndex(0);
       setShowChoices(false);
       setTimeLeft(5);
@@ -123,22 +156,52 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">
-            Frage {currentQuestionIndex + 1} von {questions.length}
-          </DialogTitle>
-          <Progress value={progress} className="h-2" />
-        </DialogHeader>
+        {showIntro ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                Glaubenseinschätzung
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6 py-6">
+              <p className="text-lg text-center text-muted-foreground">
+                Um dich besser einschätzen zu können, stellen wir dir ein paar kurze Fragen 
+                zu deinem Glauben und Bibelwissen.
+              </p>
+              <p className="text-center text-muted-foreground">
+                Du hast pro Frage nur wenige Sekunden Zeit zum Antworten. 
+                Antworte spontan und ehrlich!
+              </p>
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={() => setShowIntro(false)}
+                  size="lg"
+                  className="bg-gradient-warm text-white hover:shadow-hover transition-all duration-300"
+                >
+                  Fragebogen starten
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                Frage {currentQuestionIndex + 1} von {questions.length}
+              </DialogTitle>
+              <Progress value={progress} className="h-2" />
+            </DialogHeader>
 
-        <div className="space-y-8 py-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestionIndex}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
+            <div className="space-y-8 py-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentQuestionIndex}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
               {/* Question Title */}
               <div className="text-center">
                 <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
@@ -237,9 +300,11 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
                   )}
                 </>
               )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
