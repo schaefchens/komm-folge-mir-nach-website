@@ -5,14 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
+import Questionnaire from "@/components/Questionnaire";
 
 const SignupForm = () => {
   const [contact, setContact] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!contact.trim()) return;
+    setShowQuestionnaire(true);
+  };
+
+  const handleQuestionnaireComplete = async (answers: Record<string, string | null>) => {
+    setShowQuestionnaire(false);
     setIsSubmitting(true);
 
     try {
@@ -164,6 +172,12 @@ const SignupForm = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      <Questionnaire
+        open={showQuestionnaire}
+        onComplete={handleQuestionnaireComplete}
+        onOpenChange={setShowQuestionnaire}
+      />
     </section>
   );
 };
