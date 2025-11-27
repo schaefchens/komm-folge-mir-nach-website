@@ -5,10 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
+import { MessageCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Questionnaire from "@/components/Questionnaire";
 
 const SignupForm = () => {
   const [contact, setContact] = useState("");
+  const [service, setService] = useState<"sms" | "whatsapp">("sms");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const { toast } = useToast();
@@ -25,27 +28,28 @@ const SignupForm = () => {
 
     try {
       const response = await fetch(
-        `https://komm-folge-mir-nach.de/join.php?to=sms&mobile=${encodeURIComponent(contact)}`,
+        `https://komm-folge-mir-nach.de/join.php?to=${service}&mobile=${encodeURIComponent(contact)}`,
         { method: "GET" }
       );
       const data = await response.json();
+      const serviceName = service === "sms" ? "SMS" : "WhatsApp";
       if (data.success) {
         toast({
           title: "Erfolg!",
-          description: data.message || `Wir haben dir eine SMS an ${contact} gesendet mit einem Link zur Community.`,
+          description: data.message || `Wir haben dir eine ${serviceName}-Nachricht an ${contact} gesendet mit einem Link zur Community.`,
         });
         setContact("");
       } else {
         toast({
           title: "Fehler",
-          description: data.message || "Es gab ein Problem beim Versenden der SMS.",
+          description: data.message || `Es gab ein Problem beim Versenden der ${serviceName}-Nachricht.`,
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Es gab ein Problem beim Versenden der SMS.",
+        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "WhatsApp-Nachricht"}.`,
         variant: "destructive"
       });
     }
@@ -100,12 +104,42 @@ const SignupForm = () => {
                   <Label className="text-lg md:text-xl font-semibold text-foreground">
                     Wie möchtest du kontaktiert werden?
                   </Label>
-                  <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-border bg-background/50 p-8">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-warm flex items-center justify-center shadow-soft">
-                      <MessageSquare className="w-7 h-7 text-white" strokeWidth={2} />
-                    </div>
-                    <span className="font-semibold text-lg">SMS</span>
-                  </div>
+                  <RadioGroup value={service} onValueChange={(value) => setService(value as "sms" | "whatsapp")} className="grid grid-cols-2 gap-4">
+                    <Label htmlFor="sms" className="cursor-pointer">
+                      <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${
+                        service === "sms" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border bg-background/50 hover:border-primary/50"
+                      }`}>
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${
+                          service === "sms" ? "bg-gradient-warm" : "bg-muted"
+                        }`}>
+                          <MessageSquare className={`w-7 h-7 ${service === "sms" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="sms" id="sms" />
+                          <span className="font-semibold text-lg">SMS</span>
+                        </div>
+                      </div>
+                    </Label>
+                    <Label htmlFor="whatsapp" className="cursor-pointer">
+                      <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${
+                        service === "whatsapp" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border bg-background/50 hover:border-primary/50"
+                      }`}>
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${
+                          service === "whatsapp" ? "bg-gradient-warm" : "bg-muted"
+                        }`}>
+                          <MessageCircle className={`w-7 h-7 ${service === "whatsapp" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="whatsapp" id="whatsapp" />
+                          <span className="font-semibold text-lg">WhatsApp</span>
+                        </div>
+                      </div>
+                    </Label>
+                  </RadioGroup>
                 </div>
 
                 <div className="space-y-3">
