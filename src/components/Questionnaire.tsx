@@ -22,7 +22,7 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
   const [showIntro, setShowIntro] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showChoices, setShowChoices] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(5);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [answers, setAnswers] = useState<Record<string, string | null>>({});
   const [isAnswered, setIsAnswered] = useState(false);
 
@@ -87,19 +87,19 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
       setShowIntro(true);
       setCurrentQuestionIndex(0);
       setShowChoices(false);
-      setTimeLeft(5);
+      setTimeLeft(10);
       setAnswers({});
       setIsAnswered(false);
     }
   }, [open]);
 
-  // Auto-reveal choices after 3 seconds
+  // Auto-reveal choices after 5 seconds
   useEffect(() => {
     if (!open || showChoices || isAnswered || showIntro) return;
 
     const autoRevealTimer = setTimeout(() => {
       revealChoices();
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(autoRevealTimer);
   }, [open, showChoices, isAnswered, showIntro, currentQuestionIndex]);
@@ -146,7 +146,7 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowChoices(false);
-      setTimeLeft(5);
+      setTimeLeft(10);
       setIsAnswered(false);
     } else {
       onComplete(answers);
@@ -155,14 +155,14 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
 
   const revealChoices = () => {
     setShowChoices(true);
-    setTimeLeft(5);
+    setTimeLeft(10);
   };
 
   if (questions.length === 0) return null;
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const timeProgress = (timeLeft / 5) * 100;
+  const timeProgress = (timeLeft / 10) * 100;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,7 +180,7 @@ const Questionnaire = ({ open, onComplete, onOpenChange }: QuestionnaireProps) =
                 zu deinem Glauben und Bibelwissen.
               </p>
               <p className="text-center text-muted-foreground">
-                Du hast pro Frage nur wenige Sekunden Zeit zum Antworten. 
+                Du hast pro Frage 10 Sekunden Zeit zum Antworten. 
                 Antworte spontan und ehrlich!
               </p>
               <div className="flex justify-center pt-4">
