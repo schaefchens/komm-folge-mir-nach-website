@@ -112,7 +112,7 @@ if ($service === 'sms' && $provider === 'hetzner') {
         exit;
     }
 
-    $absender = 'FolgeMir';
+    $absender = 'DerWeg';
     
     require_once 'sms.php';
     $sms = new SMS('https://konsoleh.your-server.de/');
