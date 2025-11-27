@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import { MessageCircle } from "lucide-react";
@@ -12,6 +13,8 @@ import Questionnaire from "@/components/Questionnaire";
 const SignupForm = () => {
   const [contact, setContact] = useState("");
   const [service, setService] = useState<"sms" | "whatsapp">("sms");
+  const [message, setMessage] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const { toast } = useToast();
@@ -27,10 +30,16 @@ const SignupForm = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        `https://komm-folge-mir-nach.de/join.php?to=${service}&mobile=${encodeURIComponent(contact)}`,
-        { method: "GET" }
-      );
+      // Build query parameters
+      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&mobile=${encodeURIComponent(contact)}`;
+      if (message.trim()) {
+        url += `&message=${encodeURIComponent(message)}`;
+      }
+      if (inviteCode.trim()) {
+        url += `&code=${encodeURIComponent(inviteCode)}`;
+      }
+      
+      const response = await fetch(url, { method: "GET" });
       const data = await response.json();
       const serviceName = service === "sms" ? "SMS" : "WhatsApp";
       if (data.success) {
@@ -39,6 +48,8 @@ const SignupForm = () => {
           description: data.message || `Wir haben dir eine ${serviceName}-Nachricht an ${contact} gesendet mit einem Link zur Community.`,
         });
         setContact("");
+        setMessage("");
+        setInviteCode("");
       } else {
         toast({
           title: "Fehler",
@@ -154,6 +165,35 @@ const SignupForm = () => {
                     onChange={(e) => setContact(e.target.value)}
                     required
                     className="h-16 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="inviteCode" className="text-base md:text-lg font-semibold text-foreground">
+                    Einladecode <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    id="inviteCode"
+                    type="text"
+                    placeholder="ABC123"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.slice(0, 8))}
+                    maxLength={8}
+                    className="h-14 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="message" className="text-base md:text-lg font-semibold text-foreground">
+                    Deine Nachricht <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Teile uns etwas über dich mit oder stelle eine Frage..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={4}
+                    className="text-base rounded-2xl border-2 focus:border-primary transition-colors bg-background/50 resize-none"
                   />
                 </div>
 
