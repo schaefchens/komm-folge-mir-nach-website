@@ -199,6 +199,8 @@ const SignupForm = () => {
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
                     🔒 <strong>Datenschutz:</strong> Deine Nummer wird nicht gespeichert und es wird keinerlei Werbung verschickt. 
                     Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
+                    Zum Verarbeiten und Versand der Nachricht werden Twilio und WhatsApp Cloud API verwendet. 
+                    Deine Nummer wird an diese Dienste übermittelt.
                   </p>
                 </div>
               </motion.div>
