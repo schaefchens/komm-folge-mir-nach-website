@@ -101,7 +101,7 @@ const SignupForm = () => {
             <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground tracking-tight">
               Werde Teil der Gemeinschaft
             </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">Erhalte Zugang zu unserer Gemeinschaft und gehe Deinen Weg zum Herrn gemeinsam mit Brüdern.</p>
+            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">Erhalte Zugang zu unserer Gemeinschaft und folge dem Weg des Herrn Jesus gemeinsam mit Brüdern und Schwestern.</p>
           </div>
 
           <AnimatePresence mode="wait">
