@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import { MessageCircle } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import Questionnaire from "@/components/Questionnaire";
 
 const SignupForm = () => {
@@ -17,6 +18,8 @@ const SignupForm = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [acceptedIntent, setAcceptedIntent] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,19 +101,75 @@ const SignupForm = () => {
             </p>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="relative group"
-          >
-            {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
-            
-            {/* Card */}
-            <div className="relative bg-card rounded-3xl p-8 md:p-12 shadow-elegant border border-border/50">
-              <form onSubmit={handleSubmit} className="space-y-8">
+          {!showForm ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative group"
+            >
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
+              
+              {/* Intent Card */}
+              <div className="relative bg-card rounded-3xl p-12 md:p-16 shadow-elegant border border-border/50">
+                <div className="flex flex-col items-center text-center space-y-8">
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="w-20 h-20 rounded-full bg-gradient-warm flex items-center justify-center shadow-elegant"
+                  >
+                    <MessageSquare className="w-10 h-10 text-white" strokeWidth={2} />
+                  </motion.div>
+                  
+                  <h3 className="text-3xl md:text-4xl font-bold text-foreground max-w-xl leading-tight">
+                    Ich möchte Gemeinschaft in der Nachfolge Jesu
+                  </h3>
+                  
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center space-x-4 cursor-pointer p-6 rounded-2xl bg-muted/30 border-2 border-border hover:border-primary transition-all"
+                    onClick={() => {
+                      setAcceptedIntent(!acceptedIntent);
+                      if (!acceptedIntent) {
+                        setTimeout(() => setShowForm(true), 300);
+                      }
+                    }}
+                  >
+                    <Checkbox
+                      id="intent"
+                      checked={acceptedIntent}
+                      onCheckedChange={(checked) => {
+                        setAcceptedIntent(checked as boolean);
+                        if (checked) {
+                          setTimeout(() => setShowForm(true), 300);
+                        }
+                      }}
+                      className="h-8 w-8 border-2"
+                    />
+                    <Label htmlFor="intent" className="text-xl md:text-2xl font-semibold cursor-pointer">
+                      Ja, ich möchte dabei sein
+                    </Label>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="relative group"
+            >
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
+              
+              {/* Card */}
+              <div className="relative bg-card rounded-3xl p-8 md:p-12 shadow-elegant border border-border/50">
+                <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-5">
                   <Label className="text-lg md:text-xl font-semibold text-foreground">
                     Wie möchtest du kontaktiert werden?
@@ -246,6 +305,7 @@ const SignupForm = () => {
               </motion.div>
             </div>
           </motion.div>
+          )}
         </motion.div>
       </div>
 
