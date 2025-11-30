@@ -157,6 +157,16 @@ const SignupForm = () => {
                       Ja, ich möchte dabei sein
                     </Label>
                   </motion.div>
+                  
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7, duration: 0.6 }}
+                    className="text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-2xl px-4"
+                  >
+                    Ich glaube an Jesus Christus, der für meine Sünden am Kreuz gestorben und am dritten Tag auferstanden ist. 
+                    Ich möchte ihm nachfolgen und Teil einer Gemeinschaft sein, die gemeinsam den Weg mit Jesus geht.
+                  </motion.p>
                 </div>
               </div>
             </motion.div>
