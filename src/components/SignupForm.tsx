@@ -165,7 +165,7 @@ const SignupForm = () => {
                     }
                   }} className="h-8 w-8 border-2" />
                     <Label htmlFor="intent" className="text-xl md:text-2xl font-semibold cursor-pointer">
-                      Ja, ich möchte dabei sein
+                      Ja, ich will
                     </Label>
                   </motion.div>
                 </div>
@@ -276,14 +276,14 @@ const SignupForm = () => {
                 delay: 0.5
               }} className="mt-8 space-y-4">
                 <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">
-                  Du erhältst eine Nachricht mit einem persönlichen Link zu unserer Community-Webseite
+                  Du erhältst eine Nachricht mit einem persönlichen Link zu unserer Community-Webseite. Dies dient dem Schutz der Gemeinschaft.
                 </p>
                 <div className="bg-muted/30 rounded-2xl p-6 border border-border/50">
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
                     🔒 <strong>Datenschutz:</strong> Deine Nummer wird nicht gespeichert und es wird keinerlei Werbung verschickt. 
                     Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
-                    Zum Verarbeiten und Versand der Nachricht werden Twilio und WhatsApp Cloud API verwendet. 
-                    Deine Nummer wird an diese Dienste übermittelt.
+                    Zum Verarbeiten und Versand der Nachricht werden Hetzner Infrastruktur oder die WhatsApp Cloud API verwendet. 
+                    Deine Nummer wird an den entsprechenden Dienst einmalig zur Verarbeitung übermittelt.
                   </p>
                 </div>
               </motion.div>
