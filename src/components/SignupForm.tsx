@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,16 @@ const SignupForm = () => {
   const [showForm, setShowForm] = useState(false);
   const [acceptedIntent, setAcceptedIntent] = useState(false);
   const { toast } = useToast();
+  const contactInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showForm && contactInputRef.current) {
+      // Delay to allow animation to complete
+      setTimeout(() => {
+        contactInputRef.current?.focus();
+      }, 500);
+    }
+  }, [showForm]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,6 +231,7 @@ const SignupForm = () => {
                     Deine Handynummer
                   </Label>
                   <Input
+                    ref={contactInputRef}
                     id="contact"
                     type="tel"
                     placeholder="+49 123 456789"
