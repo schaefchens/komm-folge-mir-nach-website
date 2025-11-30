@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,14 +101,16 @@ const SignupForm = () => {
             </p>
           </div>
 
-          {!showForm ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="relative group"
-            >
+          <AnimatePresence mode="wait">
+            {!showForm ? (
+              <motion.div
+                key="checkbox"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.5 }}
+                className="relative group"
+              >
               {/* Glow effect */}
               <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
               
@@ -157,13 +159,15 @@ const SignupForm = () => {
                 </div>
               </div>
             </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="relative group"
-            >
+            ) : (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="relative group"
+              >
               {/* Glow effect */}
               <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
               
@@ -305,7 +309,8 @@ const SignupForm = () => {
               </motion.div>
             </div>
           </motion.div>
-          )}
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
 
