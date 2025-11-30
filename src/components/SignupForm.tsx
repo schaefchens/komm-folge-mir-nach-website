@@ -101,9 +101,7 @@ const SignupForm = () => {
             <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground tracking-tight">
               Werde Teil der Gemeinschaft
             </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">
-              Erhalte Zugang zu unserer Community und beginne deine Reise der Nachfolge
-            </p>
+            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto">Erhalte Zugang zu unserer Gemeinschaft und gehe Deinen Weg zum Herrn gemeinsam mit Brüdern.</p>
           </div>
 
           <AnimatePresence mode="wait">
@@ -139,7 +137,7 @@ const SignupForm = () => {
                     <MessageSquare className="w-10 h-10 text-white" strokeWidth={2} />
                   </motion.div>
                   
-                  <h3 className="text-3xl md:text-4xl font-bold text-foreground max-w-xl leading-tight">Ich möchte Jesus in Gemeinschaft nachfolgen</h3>
+                  <h3 className="text-3xl md:text-4xl font-bold text-foreground max-w-xl leading-tight">Ich möchte Jesus in Gemeinschaft nachfolgen und erkläre:</h3>
                   
                   <motion.p initial={{
                   opacity: 0
@@ -148,7 +146,7 @@ const SignupForm = () => {
                 }} transition={{
                   delay: 0.7,
                   duration: 0.6
-                }} className="text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-2xl px-4">Ich glaube an Jesus Christus den fleischgewordenen Sohn Gottes, der zur Vergebung meiner Sünden am Kreuz gestorben und am dritten Tag auferstanden ist. Ich möchte Ihm mit ganzem Herzen und ganzer Seele nachfolgen und Teil einer Gemeinschaft sein, die gemeinsam mit mir den Weg und der Lehre Jesu nachfolgt.</motion.p>
+                }} className="text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-2xl px-4">Ich glaube an Jesus Christus den fleischgewordenen Sohn Gottes, der zur Vergebung meiner Sünden am Kreuz gestorben und am dritten Tag auferstanden ist. Ich möchte Sein Geschenk annehmen und von meinen alten sündigen Wegen umkehren und Ihm mit ganzem Herzen und ganzer Seele nachfolgen.</motion.p>
                   
                   <motion.div whileHover={{
                   scale: 1.02
