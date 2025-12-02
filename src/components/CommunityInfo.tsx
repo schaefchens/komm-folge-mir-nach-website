@@ -1,4 +1,11 @@
 import { motion } from "framer-motion";
+import communityDiverse from "@/assets/community-diverse.jpg";
+import communityPath from "@/assets/community-path.jpg";
+import communityUnity from "@/assets/community-unity.jpg";
+import communityEncourage from "@/assets/community-encourage.jpg";
+import communityPaths from "@/assets/community-paths.jpg";
+import communityPrayer from "@/assets/community-prayer.jpg";
+import communitySpirit from "@/assets/community-spirit.jpg";
 
 const CommunityInfo = () => {
   const paragraphs = [
@@ -8,33 +15,40 @@ const CommunityInfo = () => {
       highlight2: "gemeinsam Nachfolge zu leben",
       text2: ". Ob Protestant, Katholik, Baptist, Charismatiker, alles dazwischen oder auch ganz ohne Kirchenzugehörigkeit ist nicht wichtig, solange dem Herrn wie Er in der Heiligen Schrift verkündet wird nachgefolgt und alles",
       highlight3: "Ihm",
-      text3: "unter geordnet wird."
+      text3: "unter geordnet wird.",
+      image: communityDiverse
     },
     {
       highlight: "Das Ziel",
       text: "ist nicht gemeinsame Theologie und Schriftverständnis, sondern",
-      highlight2: "Nachfolge in Tat und Wahrheit und im Wort ganz im Geiste des Herrn so wie Er in der Heiligen Schrift verkündet wird."
+      highlight2: "Nachfolge in Tat und Wahrheit und im Wort ganz im Geiste des Herrn so wie Er in der Heiligen Schrift verkündet wird.",
+      image: communityPath
     },
     {
       highlight: "Und auch",
       text: "wenn es theologische Differenzen geben mag,",
       highlight2: "so sind wir doch alle Glieder eines Leibes nämlich unseres Herrn Jesus Christus",
       text2: ". Statt Diskussion über Schriftauslegungen und Tradition und Kirchengeschichte widmen wir uns in Liebe",
-      highlight3: "gemeinsamen Gebet, Gesang, Abendmahl, Studium und lebendiger Gemeinschaft."
+      highlight3: "gemeinsamen Gebet, Gesang, Abendmahl, Studium und lebendiger Gemeinschaft.",
+      image: communityUnity
     },
     {
       highlight: "Wir ermutigen uns",
-      text: "in der Nachfolge, fangen uns auf wenn wir angefochten werden und bekräftigen uns mit Erbauung und Segen."
+      text: "in der Nachfolge, fangen uns auf wenn wir angefochten werden und bekräftigen uns mit Erbauung und Segen.",
+      image: communityEncourage
     },
     {
       highlight: "Jeder von uns",
-      text: "hat seinen eigenen Weg zum Herrn und seine eigenen Glaubenssätze und Theologien, doch es ist wichtig das wir unseren Willen nicht zum Willen der anderen machen."
+      text: "hat seinen eigenen Weg zum Herrn und seine eigenen Glaubenssätze und Theologien, doch es ist wichtig das wir unseren Willen nicht zum Willen der anderen machen.",
+      image: communityPaths
     },
     {
-      text: "Statt Belehrungen setzen wir auf Gebet und bitten unseren Vater uns auf den richtigen Weg zu bringen."
+      text: "Statt Belehrungen setzen wir auf Gebet und bitten unseren Vater uns auf den richtigen Weg zu bringen.",
+      image: communityPrayer
     },
     {
-      text: "Statt persönlichem Eifer vertrauen wir in Gebet darauf das der Heilige Geist des Herrn uns und unsere Brüder auf den richtigen Weg bringen wird."
+      text: "Statt persönlichem Eifer vertrauen wir in Gebet darauf das der Heilige Geist des Herrn uns und unsere Brüder auf den richtigen Weg bringen wird.",
+      image: communitySpirit
     }
   ];
 
@@ -78,7 +92,7 @@ const CommunityInfo = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="group relative bg-card rounded-2xl p-8 md:p-10 shadow-soft border border-border/50 hover:border-primary/20 hover:shadow-elegant transition-all duration-500 overflow-hidden"
+              className="group relative bg-card rounded-2xl shadow-soft border border-border/50 hover:border-primary/20 hover:shadow-elegant transition-all duration-500 overflow-hidden"
             >
               {/* Gradient Overlay on Hover */}
               <div className="absolute inset-0 bg-gradient-hero opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
@@ -86,15 +100,26 @@ const CommunityInfo = () => {
               {/* Accent Line */}
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-warm rounded-l-2xl" />
               
-              <div className="relative z-10">
-                <p className="text-lg md:text-xl text-foreground/90 leading-relaxed">
-                  {para.highlight && <><strong className="text-foreground">{para.highlight}</strong> </>}{para.text}
-                  {para.highlight2 && <> <strong className="text-foreground">{para.highlight2}</strong></>}
-                  {para.text2 && <> {para.text2}</>}
-                  {para.highlight3 && <> <strong className="text-foreground">{para.highlight3}</strong></>}
-                  {para.text3 && <> {para.text3}</>}
-                </p>
+              <div className="relative z-10 flex flex-col md:flex-row">
+                {/* Image */}
+                <div className="md:w-1/3 flex-shrink-0">
+                  <img 
+                    src={para.image} 
+                    alt="" 
+                    className="w-full h-48 md:h-full object-cover rounded-t-2xl md:rounded-t-none md:rounded-l-2xl"
+                  />
+                </div>
                 
+                {/* Text Content */}
+                <div className="flex-1 p-8 md:p-10 flex items-center">
+                  <p className="text-lg md:text-xl text-foreground/90 leading-relaxed">
+                    {para.highlight && <><strong className="text-foreground">{para.highlight}</strong> </>}{para.text}
+                    {para.highlight2 && <> <strong className="text-foreground">{para.highlight2}</strong></>}
+                    {para.text2 && <> {para.text2}</>}
+                    {para.highlight3 && <> <strong className="text-foreground">{para.highlight3}</strong></>}
+                    {para.text3 && <> {para.text3}</>}
+                  </p>
+                </div>
               </div>
 
               {/* Decorative Element */}
