@@ -28,11 +28,7 @@ const CommunityInfo = () => {
     },
     {
       highlight: "Jeder von uns",
-      text: "hat seinen eigenen Weg zum Herrn und seine eigenen Glaubenssätze und Theologien, doch es ist wichtig das wir unseren Willen nicht zum Willen der anderen machen.",
-      subtext: [
-        "Statt Belehrungen setzen wir auf Gebet und bitten unseren Vater uns auf den richtigen Weg zu bringen.",
-        "Statt persönlichem Eifer vertrauen wir in Gebet darauf das der Heilige Geist des Herrn uns und unsere Brüder auf den richtigen Weg bringen wird."
-      ]
+      text: "hat seinen eigenen Weg zum Herrn und seine eigenen Glaubenssätze und Theologien, doch es ist wichtig das wir unseren Willen nicht zum Willen der anderen machen. Statt Belehrungen setzen wir auf Gebet und bitten unseren Vater uns auf den richtigen Weg zu bringen. Statt persönlichem Eifer vertrauen wir in Gebet darauf das der Heilige Geist des Herrn uns und unsere Brüder auf den richtigen Weg bringen wird."
     }
   ];
 
@@ -93,15 +89,6 @@ const CommunityInfo = () => {
                   {para.text3 && <> {para.text3}</>}
                 </p>
                 
-                {para.subtext && (
-                  <div className="mt-6 space-y-4 pl-6 border-l-2 border-primary/20">
-                    {para.subtext.map((sub, subIndex) => (
-                      <p key={subIndex} className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                        {sub}
-                      </p>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Decorative Element */}
