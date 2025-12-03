@@ -179,10 +179,10 @@ const CommunityInfo = () => {
             className="h-0.5 bg-gradient-warm mx-auto mb-8 rounded-full opacity-60"
           />
           
-          <p className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
+          <p className="font-blessing text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
             Unser Herr segne euch,
           </p>
-          <p className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
+          <p className="font-blessing text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
             liebe Brüder und Schwestern 🙏
           </p>
           

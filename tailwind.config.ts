@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         serif: ['"Playfair Display"', 'serif'],
         sans: ['Outfit', 'sans-serif'],
+        blessing: ['"Great Vibes"', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",
