@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight } from "lucide-react";
-import { MessageCircle } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import Questionnaire from "@/components/Questionnaire";
 const SignupForm = () => {
@@ -197,30 +195,17 @@ const SignupForm = () => {
                   <Label className="text-lg md:text-xl font-semibold text-foreground">
                     Wie möchtest du kontaktiert werden?
                   </Label>
-                  <RadioGroup value={service} onValueChange={value => setService(value as "sms" | "whatsapp")} className="grid grid-cols-2 gap-4">
-                    <Label htmlFor="sms" className="cursor-pointer">
-                      <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${service === "sms" ? "border-primary bg-primary/5" : "border-border bg-background/50 hover:border-primary/50"}`}>
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${service === "sms" ? "bg-gradient-warm" : "bg-muted"}`}>
-                          <MessageSquare className={`w-7 h-7 ${service === "sms" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="sms" id="sms" />
-                          <span className="font-semibold text-lg">SMS</span>
-                        </div>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                    Du erhältst eine Nachricht mit einem persönlichen Link zu unserer Community-Webseite.
+                  </p>
+                  <Label htmlFor="sms" className="cursor-pointer block">
+                    <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 border-primary bg-primary/5`}>
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all bg-gradient-warm`}>
+                        <MessageSquare className="w-7 h-7 text-white" strokeWidth={2} />
                       </div>
-                    </Label>
-                    <Label htmlFor="whatsapp" className="cursor-pointer">
-                      <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${service === "whatsapp" ? "border-primary bg-primary/5" : "border-border bg-background/50 hover:border-primary/50"}`}>
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${service === "whatsapp" ? "bg-gradient-warm" : "bg-muted"}`}>
-                          <MessageCircle className={`w-7 h-7 ${service === "whatsapp" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="whatsapp" id="whatsapp" />
-                          <span className="font-semibold text-lg">WhatsApp</span>
-                        </div>
-                      </div>
-                    </Label>
-                  </RadioGroup>
+                      <span className="font-semibold text-lg">SMS</span>
+                    </div>
+                  </Label>
                 </div>
 
                 <div className="space-y-3">
@@ -231,17 +216,17 @@ const SignupForm = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="inviteCode" className="text-base md:text-lg font-semibold text-foreground">
-                    Einladecode <span className="text-muted-foreground font-normal">(optional)</span>
-                  </Label>
-                  <Input id="inviteCode" type="text" placeholder="ABC123" value={inviteCode} onChange={e => setInviteCode(e.target.value.slice(0, 8))} maxLength={8} className="h-14 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50" />
-                </div>
-
-                <div className="space-y-3">
                   <Label htmlFor="message" className="text-base md:text-lg font-semibold text-foreground">
                     Deine Nachricht <span className="text-muted-foreground font-normal">(optional)</span>
                   </Label>
                   <Textarea id="message" placeholder="Teile uns etwas über dich mit oder stelle eine Frage..." value={message} onChange={e => setMessage(e.target.value)} rows={4} className="text-base rounded-2xl border-2 focus:border-primary transition-colors bg-background/50 resize-none" />
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="inviteCode" className="text-base md:text-lg font-semibold text-foreground">
+                    Einladecode <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input id="inviteCode" type="text" placeholder="ABC123" value={inviteCode} onChange={e => setInviteCode(e.target.value.slice(0, 8))} maxLength={8} className="h-14 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50" />
                 </div>
 
                 <motion.div whileHover={{
@@ -276,14 +261,14 @@ const SignupForm = () => {
                 delay: 0.5
               }} className="mt-8 space-y-4">
                 <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">
-                  Du erhältst eine Nachricht mit einem persönlichen Link zu unserer Community-Webseite. Dies dient dem Schutz der Gemeinschaft.
+                  Dies dient dem Schutz der Gemeinschaft.
                 </p>
                 <div className="bg-muted/30 rounded-2xl p-6 border border-border/50">
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
                     🔒 <strong>Datenschutz:</strong> Deine Nummer wird nicht gespeichert und es wird keinerlei Werbung verschickt. 
                     Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
-                    Zum Verarbeiten und Versand der Nachricht werden Hetzner Infrastruktur oder die WhatsApp Cloud API verwendet. 
-                    Deine Nummer wird an den entsprechenden Dienst einmalig zur Verarbeitung übermittelt.
+                    Zum Verarbeiten und Versand der Nachricht wird die Hetzner Infrastruktur verwendet. 
+                    Deine Nummer wird einmalig zur Verarbeitung übermittelt.
                   </p>
                 </div>
               </motion.div>
