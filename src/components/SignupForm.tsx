@@ -195,9 +195,7 @@ const SignupForm = () => {
                   <Label className="text-lg md:text-xl font-semibold text-foreground">
                     Wie möchtest du kontaktiert werden?
                   </Label>
-                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                    Du erhältst eine Nachricht mit einem persönlichen Link zu unserer Community-Webseite.
-                  </p>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">Du erhältst eine persönliche Nachricht mit einem Link zu unserer Webseite und Community. Dies dient dem Schutz der Gemeinschaft.</p>
                   <Label htmlFor="sms" className="cursor-pointer block">
                     <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 border-primary bg-primary/5`}>
                       <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all bg-gradient-warm`}>
@@ -260,9 +258,7 @@ const SignupForm = () => {
               }} transition={{
                 delay: 0.5
               }} className="mt-8 space-y-4">
-                <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">
-                  Dies dient dem Schutz der Gemeinschaft.
-                </p>
+                <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">(Deine Daten werden nicht gespeichert und nach dem Versand gelöscht)</p>
                 <div className="bg-muted/30 rounded-2xl p-6 border border-border/50">
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
                     🔒 <strong>Datenschutz:</strong> Deine Nummer wird nicht gespeichert und es wird keinerlei Werbung verschickt. 
