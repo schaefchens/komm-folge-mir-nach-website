@@ -57,13 +57,19 @@ const Hero = () => {
           }} transition={{
             duration: 0.8,
             delay: 0.5
-          }} className="h-1 bg-gradient-warm mx-auto mb-8 rounded-full" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))' }} />
+          }} className="h-1 bg-gradient-warm mx-auto mb-8 rounded-full" style={{
+            filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))'
+          }} />
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] text-white tracking-tight lg:text-6xl" style={{ filter: 'drop-shadow(0 2px 20px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 40px rgba(0, 0, 0, 0.5))' }}>
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] text-white tracking-tight lg:text-6xl" style={{
+            filter: 'drop-shadow(0 2px 20px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 40px rgba(0, 0, 0, 0.5))'
+          }}>
               „Ich habe dich bei deinem <span className="text-transparent bg-clip-text bg-gradient-warm">Namen gerufen</span>, du bist mein."
             </h1>
             
-            <p className="text-xl md:text-2xl text-white font-light tracking-wide" style={{ filter: 'drop-shadow(0 2px 15px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 30px rgba(0, 0, 0, 0.5))' }}>
+            <p className="text-xl md:text-2xl text-white font-light tracking-wide" style={{
+            filter: 'drop-shadow(0 2px 15px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 30px rgba(0, 0, 0, 0.5))'
+          }}>
               – Jesaja 43,1
             </p>
           </motion.div>
@@ -79,7 +85,9 @@ const Hero = () => {
           delay: 0.7
         }} className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-warm opacity-5 blur-2xl rounded-3xl" />
-            <p className="text-lg md:text-2xl text-foreground max-w-3xl mx-auto leading-relaxed font-light relative bg-background/40 backdrop-blur-sm px-6 py-4 rounded-xl" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2)' }}>
+            <p style={{
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2)'
+          }} className="text-lg md:text-2xl text-foreground max-w-3xl mx-auto leading-relaxed font-light relative bg-background/20 backdrop-blur-sm px-6 py-4 rounded-xl">
               Wir sind eine Gemeinschaft von Jüngern, die dem Herrn Jesus nachfolgen möchten – im Geiste, mit all unserer Kraft und von ganzem Herzen.
             </p>
           </motion.div>
