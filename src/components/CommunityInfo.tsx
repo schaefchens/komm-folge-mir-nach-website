@@ -155,18 +155,44 @@ const CommunityInfo = () => {
                 <p className="text-xl md:text-2xl text-foreground/90 italic mb-8 leading-relaxed font-light">
                   „Was siehst du aber den Splitter im Auge deines Bruders, und den Balken in deinem eigenen Auge bemerkst du nicht?"
                 </p>
-                <p className="text-lg text-muted-foreground mb-10 font-medium">
+                <p className="text-lg text-muted-foreground font-medium">
                   – Matthäus 7,3–5
-                </p>
-                
-                <div className="h-px w-32 bg-gradient-warm mx-auto mb-10 opacity-50" />
-                
-                <p className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-warm">
-                  Unser Herr segne euch, liebe Brüder und Schwestern 🙏
                 </p>
               </motion.div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Blessing Statement */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-16 text-center"
+        >
+          <motion.div
+            initial={{ width: 0 }}
+            whileInView={{ width: "60px" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="h-0.5 bg-gradient-warm mx-auto mb-8 rounded-full opacity-60"
+          />
+          
+          <p className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
+            Unser Herr segne euch,
+          </p>
+          <p className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
+            liebe Brüder und Schwestern 🙏
+          </p>
+          
+          <motion.div
+            initial={{ width: 0 }}
+            whileInView={{ width: "60px" }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="h-0.5 bg-gradient-warm mx-auto mt-8 rounded-full opacity-60"
+          />
         </motion.div>
       </div>
     </section>
