@@ -79,7 +79,7 @@ const Hero = () => {
           delay: 0.7
         }} className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-warm opacity-5 blur-2xl rounded-3xl" />
-            <p className="text-lg md:text-2xl text-foreground/80 max-w-3xl mx-auto leading-relaxed font-light relative">
+            <p className="text-lg md:text-2xl text-foreground max-w-3xl mx-auto leading-relaxed font-light relative" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2)' }}>
               Wir sind eine Gemeinschaft von Jüngern, die dem Herrn Jesus nachfolgen möchten – im Geiste, mit all unserer Kraft und von ganzem Herzen.
             </p>
           </motion.div>
