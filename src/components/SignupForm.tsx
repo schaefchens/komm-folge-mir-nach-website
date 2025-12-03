@@ -144,7 +144,7 @@ const SignupForm = () => {
                 }} transition={{
                   delay: 0.7,
                   duration: 0.6
-                }} className="text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-2xl px-4">Ich glaube an Jesus Christus den fleischgewordenen Sohn Gottes, der zur Vergebung meiner Sünden am Kreuz gestorben und am dritten Tag von den Toten auferstanden ist. Ich möchte Sein Geschenk annehmen und von meinen alten sündigen Wegen umkehren und Ihm mit ganzem Herzen und ganzer Seele nachfolgen.</motion.p>
+                }} className="text-sm md:text-base text-muted-foreground text-center leading-relaxed max-w-2xl px-4">"Ich glaube an Jesus Christus den fleischgewordenen Sohn Gottes, der zur Vergebung meiner Sünden am Kreuz gestorben und am dritten Tag von den Toten auferstanden ist. Ich möchte Sein Geschenk annehmen und von meinen alten sündigen Wegen umkehren und Ihm mit ganzem Herzen und ganzer Seele nachfolgen."</motion.p>
                   
                   <motion.div whileHover={{
                   scale: 1.02

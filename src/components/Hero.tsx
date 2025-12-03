@@ -59,7 +59,7 @@ const Hero = () => {
             delay: 0.5
           }} className="h-1 bg-gradient-warm mx-auto mb-8 rounded-full" style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))' }} />
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] text-white tracking-tight lg:text-6xl" style={{ filter: 'drop-shadow(0 2px 20px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 40px rgba(0, 0, 0, 0.5))' }}>
+            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] text-white tracking-tight lg:text-6xl" style={{ filter: 'drop-shadow(0 2px 20px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 40px rgba(0, 0, 0, 0.5))' }}>
               „Ich habe dich bei deinem <span className="text-transparent bg-clip-text bg-gradient-warm">Namen gerufen</span>, du bist mein."
             </h1>
             
@@ -79,7 +79,7 @@ const Hero = () => {
           delay: 0.7
         }} className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-warm opacity-5 blur-2xl rounded-3xl" />
-            <p className="text-lg md:text-2xl text-foreground max-w-3xl mx-auto leading-relaxed font-light relative bg-background/40 backdrop-blur-sm px-6 py-4 rounded-xl" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2)' }}>
+            <p className="text-lg md:text-2xl text-white max-w-3xl mx-auto leading-relaxed font-light relative  backdrop-blur-none px-6 py-4 rounded-xl" style={{ textShadow: '0 2px 16px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.3)' }}>
               Wir sind eine Gemeinschaft von Jüngern, die dem Herrn Jesus nachfolgen möchten – im Geiste, mit all unserer Kraft und von ganzem Herzen.
             </p>
           </motion.div>
@@ -101,6 +101,12 @@ const Hero = () => {
           }}>
               <a href="#community" className="group relative inline-flex items-center gap-3 bg-background/80 backdrop-blur-sm text-foreground px-8 py-4 rounded-full text-lg font-semibold shadow-elegant hover:shadow-hover transition-all duration-300 border border-border/30 hover:border-primary/30">
                 <span className="relative z-10">Mehr Information</span>
+                <span className="relative z-10 flex items-center">
+                  {/* Down Arrow Icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" className="ml-2 group-hover:translate-y-1 transition-transform duration-300">
+                    <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 10l6 6 6-6" />
+                  </svg>
+                </span>
               </a>
             </motion.div>
             
