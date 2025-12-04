@@ -167,7 +167,7 @@ const CommunityInfo = () => {
           </div>
         </motion.div>
 
-        {/* Blessing Statement */}
+        {/* Blessing Section - Full Screen */}
         <motion.div initial={{
         opacity: 0,
         y: 20
@@ -179,34 +179,64 @@ const CommunityInfo = () => {
       }} transition={{
         duration: 0.8,
         delay: 0.6
-      }} className="mt-16 text-center">
+      }} className="mt-32 md:mt-48 min-h-[80vh] flex flex-col items-center justify-center text-center">
           <motion.div initial={{
           width: 0
         }} whileInView={{
-          width: "60px"
+          width: "100px"
         }} viewport={{
           once: true
         }} transition={{
           duration: 0.6,
           delay: 0.7
-        }} className="h-0.5 bg-gradient-warm mx-auto mb-8 rounded-full opacity-60" />
+        }} className="h-1 bg-gradient-warm mx-auto mb-12 rounded-full" />
           
-          <p className="font-blessing text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
+          <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
             Unser Herr segne euch,
           </p>
-          <p className="font-blessing text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">liebe Brüder und Schwestern<br/>
-🕊️</p>
+          <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed mb-16">
+            liebe Brüder und Schwestern
+          </p>
+          
+          {/* Large Cross */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="relative"
+          >
+            <svg 
+              viewBox="0 0 100 140" 
+              className="w-24 h-32 md:w-32 md:h-44"
+              fill="none"
+            >
+              <defs>
+                <linearGradient id="crossGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" />
+                  <stop offset="100%" stopColor="hsl(var(--accent))" />
+                </linearGradient>
+              </defs>
+              {/* Vertical beam */}
+              <rect x="40" y="0" width="20" height="140" rx="3" fill="url(#crossGradient)" />
+              {/* Horizontal beam */}
+              <rect x="10" y="25" width="80" height="20" rx="3" fill="url(#crossGradient)" />
+            </svg>
+            
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-warm opacity-20 blur-2xl rounded-full scale-150" />
+          </motion.div>
           
           <motion.div initial={{
           width: 0
         }} whileInView={{
-          width: "60px"
+          width: "100px"
         }} viewport={{
           once: true
         }} transition={{
           duration: 0.6,
-          delay: 0.8
-        }} className="h-0.5 bg-gradient-warm mx-auto mt-8 rounded-full opacity-60" />
+          delay: 1
+        }} className="h-1 bg-gradient-warm mx-auto mt-16 rounded-full" />
         </motion.div>
       </div>
     </section>;
