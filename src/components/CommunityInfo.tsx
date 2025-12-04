@@ -194,23 +194,23 @@ const CommunityInfo = () => {
           <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">
             Unser Herr segne euch,
           </p>
-          <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed mb-16">
-            liebe Brüder und Schwestern
-          </p>
+          <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed mb-16">liebe Brüder und Schwestern
+🕊️</p>
           
           {/* Large Cross */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="relative"
-          >
-            <svg 
-              viewBox="0 0 100 140" 
-              className="w-24 h-32 md:w-32 md:h-44"
-              fill="none"
-            >
+          <motion.div initial={{
+          opacity: 0,
+          scale: 0.8
+        }} whileInView={{
+          opacity: 1,
+          scale: 1
+        }} viewport={{
+          once: true
+        }} transition={{
+          duration: 1,
+          delay: 0.8
+        }} className="relative">
+            <svg viewBox="0 0 100 140" className="w-24 h-32 md:w-32 md:h-44" fill="none">
               <defs>
                 <linearGradient id="crossGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="hsl(var(--primary))" />
