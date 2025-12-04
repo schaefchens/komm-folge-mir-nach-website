@@ -8,6 +8,15 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Questionnaire from "@/components/Questionnaire";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 const SignupForm = () => {
   const [contact, setContact] = useState("");
   const [service, setService] = useState<"sms" | "email">("sms");
@@ -18,6 +27,7 @@ const SignupForm = () => {
   const [showForm, setShowForm] = useState(false);
   const [acceptedIntent, setAcceptedIntent] = useState(false);
   const [showEmailOption, setShowEmailOption] = useState(false);
+  const [showEmailWarningModal, setShowEmailWarningModal] = useState(false);
   const {
     toast
   } = useToast();
@@ -235,8 +245,8 @@ const SignupForm = () => {
                   {!showEmailOption && (
                     <button
                       type="button"
-                      onClick={() => setShowEmailOption(true)}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+                      onClick={() => setShowEmailWarningModal(true)}
+                      className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
                     >
                       Ich kann SMS nicht empfangen
                     </button>
@@ -261,9 +271,17 @@ const SignupForm = () => {
 
                 <div className="space-y-3">
                   <Label htmlFor="message" className="text-base md:text-lg font-semibold text-foreground">
-                    Deine Nachricht <span className="text-muted-foreground font-normal">(optional)</span>
+                    Deine Nachricht {service === "email" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground font-normal">(optional)</span>}
                   </Label>
-                  <Textarea id="message" placeholder="Teile uns etwas über dich mit oder stelle eine Frage..." value={message} onChange={e => setMessage(e.target.value)} rows={4} className="text-base rounded-2xl border-2 focus:border-primary transition-colors bg-background/50 resize-none" />
+                  <Textarea 
+                    id="message" 
+                    placeholder={service === "email" ? "Bitte erzähle uns etwas über dich und deinen Glaubensweg..." : "Teile uns etwas über dich mit oder stelle eine Frage..."} 
+                    value={message} 
+                    onChange={e => setMessage(e.target.value)} 
+                    required={service === "email"}
+                    rows={4} 
+                    className="text-base rounded-2xl border-2 focus:border-primary transition-colors bg-background/50 resize-none" 
+                  />
                 </div>
 
                 <div className="space-y-3">
@@ -321,6 +339,41 @@ const SignupForm = () => {
       </div>
 
       <Questionnaire open={showQuestionnaire} onComplete={handleQuestionnaireComplete} onOpenChange={setShowQuestionnaire} />
+      
+      {/* Email Warning Modal */}
+      <Dialog open={showEmailWarningModal} onOpenChange={setShowEmailWarningModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Hinweis zur E-Mail-Option</DialogTitle>
+            <DialogDescription className="text-base leading-relaxed pt-4 space-y-4">
+              <p>
+                <strong>SMS dient dem Schutz der Gemeinschaft:</strong> Da eine Handynummer schwerer zu fälschen ist, können wir schneller verifizieren, dass du eine echte Person bist.
+              </p>
+              <p>
+                <strong>Bei E-Mail-Anmeldung:</strong> Es findet eine ausgiebigere Prüfung statt, bevor der Link zur Gemeinschaft verschickt wird. Dies kann einige Zeit in Anspruch nehmen.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowEmailWarningModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Zurück
+            </Button>
+            <Button
+              onClick={() => {
+                setShowEmailWarningModal(false);
+                setShowEmailOption(true);
+              }}
+              className="w-full sm:w-auto bg-gradient-warm text-white border-0"
+            >
+              Verstanden, E-Mail nutzen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>;
 };
 export default SignupForm;
