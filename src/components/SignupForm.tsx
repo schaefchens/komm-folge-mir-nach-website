@@ -5,18 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, ArrowRight } from "lucide-react";
+import { MessageSquare, ArrowRight, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Questionnaire from "@/components/Questionnaire";
 const SignupForm = () => {
   const [contact, setContact] = useState("");
-  const [service, setService] = useState<"sms" | "whatsapp">("sms");
+  const [service, setService] = useState<"sms" | "email">("sms");
   const [message, setMessage] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [acceptedIntent, setAcceptedIntent] = useState(false);
+  const [showEmailOption, setShowEmailOption] = useState(false);
   const {
     toast
   } = useToast();
@@ -31,7 +32,8 @@ const SignupForm = () => {
     setIsSubmitting(true);
     try {
       // Build query parameters
-      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&mobile=${encodeURIComponent(contact)}`;
+      const contactParam = service === "sms" ? "mobile" : "email";
+      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&${contactParam}=${encodeURIComponent(contact)}`;
       if (message.trim()) {
         url += `&message=${encodeURIComponent(message)}`;
       }
@@ -42,7 +44,7 @@ const SignupForm = () => {
         method: "GET"
       });
       const data = await response.json();
-      const serviceName = service === "sms" ? "SMS" : "WhatsApp";
+      const serviceName = service === "sms" ? "SMS" : "E-Mail";
       if (data.success) {
         toast({
           title: "Erfolg!",
@@ -61,7 +63,7 @@ const SignupForm = () => {
     } catch (error) {
       toast({
         title: "Fehler",
-        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "WhatsApp-Nachricht"}.`,
+        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "E-Mail"}.`,
         variant: "destructive"
       });
     }
@@ -196,21 +198,65 @@ const SignupForm = () => {
                     Wie möchtest du kontaktiert werden?
                   </Label>
                   <p className="text-sm md:text-base text-muted-foreground leading-relaxed">Du erhältst eine persönliche Nachricht mit einem Link zu unserer Webseite und Community. Dies dient dem Schutz der Gemeinschaft.</p>
-                  <Label htmlFor="sms" className="cursor-pointer block">
-                    <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 border-primary bg-primary/5`}>
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all bg-gradient-warm`}>
-                        <MessageSquare className="w-7 h-7 text-white" strokeWidth={2} />
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <Label htmlFor="sms" className="cursor-pointer block">
+                      <input type="radio" id="sms" name="service" value="sms" checked={service === "sms"} onChange={() => { setService("sms"); setContact(""); }} className="sr-only" />
+                      <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${service === "sms" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
+                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${service === "sms" ? "bg-gradient-warm" : "bg-muted"}`}>
+                          <MessageSquare className={`w-7 h-7 ${service === "sms" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
+                        </div>
+                        <span className="font-semibold text-lg">SMS</span>
                       </div>
-                      <span className="font-semibold text-lg">SMS</span>
-                    </div>
-                  </Label>
+                    </Label>
+                    
+                    <AnimatePresence>
+                      {showEmailOption && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Label htmlFor="email" className="cursor-pointer block">
+                            <input type="radio" id="email" name="service" value="email" checked={service === "email"} onChange={() => { setService("email"); setContact(""); }} className="sr-only" />
+                            <div className={`flex flex-col items-center justify-center gap-4 rounded-2xl border-2 transition-all p-8 ${service === "email" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
+                              <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-soft transition-all ${service === "email" ? "bg-gradient-warm" : "bg-muted"}`}>
+                                <Mail className={`w-7 h-7 ${service === "email" ? "text-white" : "text-muted-foreground"}`} strokeWidth={2} />
+                              </div>
+                              <span className="font-semibold text-lg">E-Mail</span>
+                            </div>
+                          </Label>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  
+                  {!showEmailOption && (
+                    <button
+                      type="button"
+                      onClick={() => setShowEmailOption(true)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+                    >
+                      Ich kann SMS nicht empfangen
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-3">
                   <Label htmlFor="contact" className="text-lg md:text-xl font-semibold text-foreground">
-                    Deine Handynummer
+                    {service === "sms" ? "Deine Handynummer" : "Deine E-Mail-Adresse"}
                   </Label>
-                  <Input ref={contactInputRef} id="contact" type="tel" placeholder="+49 123 456789" value={contact} onChange={e => setContact(e.target.value)} required className="h-16 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50" />
+                  <Input 
+                    ref={contactInputRef} 
+                    id="contact" 
+                    type={service === "sms" ? "tel" : "email"} 
+                    placeholder={service === "sms" ? "+49 123 456789" : "deine@email.de"} 
+                    value={contact} 
+                    onChange={e => setContact(e.target.value)} 
+                    required 
+                    className="h-16 text-lg rounded-2xl border-2 focus:border-primary transition-colors bg-background/50" 
+                  />
                 </div>
 
                 <div className="space-y-3">
@@ -261,10 +307,10 @@ const SignupForm = () => {
                 <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">(Deine Daten werden nicht gespeichert und nach dem Versand gelöscht)</p>
                 <div className="bg-muted/30 rounded-2xl p-6 border border-border/50">
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
-                    🔒 <strong>Datenschutz:</strong> Deine Nummer wird nicht gespeichert und es wird keinerlei Werbung verschickt. 
+                    🔒 <strong>Datenschutz:</strong> Deine Kontaktdaten werden nicht gespeichert und es wird keinerlei Werbung verschickt. 
                     Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
                     Zum Verarbeiten und Versand der Nachricht wird die Hetzner Infrastruktur verwendet. 
-                    Deine Nummer wird einmalig zur Verarbeitung übermittelt.
+                    Deine Daten werden einmalig zur Verarbeitung übermittelt.
                   </p>
                 </div>
               </motion.div>
