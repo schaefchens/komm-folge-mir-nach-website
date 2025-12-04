@@ -28,6 +28,7 @@ const SignupForm = () => {
   const [acceptedIntent, setAcceptedIntent] = useState(false);
   const [showEmailOption, setShowEmailOption] = useState(false);
   const [showEmailWarningModal, setShowEmailWarningModal] = useState(false);
+  const [showFullPrivacy, setShowFullPrivacy] = useState(false);
   const {
     toast
   } = useToast();
@@ -321,14 +322,28 @@ const SignupForm = () => {
                 opacity: 1
               }} transition={{
                 delay: 0.5
-              }} className="mt-8 space-y-4">
-                <p className="text-sm md:text-base text-muted-foreground text-center leading-relaxed">(Deine Daten werden nicht gespeichert und nach dem Versand gelöscht)</p>
+              }} className="mt-8">
                 <div className="bg-muted/30 rounded-2xl p-6 border border-border/50">
                   <p className="text-xs md:text-sm text-muted-foreground text-center leading-relaxed">
-                    🔒 <strong>Datenschutz:</strong> Deine Kontaktdaten werden nicht gespeichert und es wird keinerlei Werbung verschickt. 
-                    Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
-                    Zum Verarbeiten und Versand der Nachricht wird die Hetzner Infrastruktur verwendet. 
-                    Deine Daten werden einmalig zur Verarbeitung übermittelt.
+                    🔒 <strong>Datenschutz:</strong> Deine Kontaktdaten werden nicht gespeichert und es wird keinerlei Werbung verschickt.
+                    {showFullPrivacy ? (
+                      <>
+                        {" "}Du erhältst ausschließlich den Link zur Community zum Schutz der Gemeinschaft.
+                        Zum Verarbeiten und Versand der Nachricht wird die Hetzner Infrastruktur verwendet. 
+                        Deine Daten werden einmalig zur Verarbeitung übermittelt.
+                      </>
+                    ) : (
+                      <>
+                        {" "}
+                        <button
+                          type="button"
+                          onClick={() => setShowFullPrivacy(true)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                        >
+                          Mehr anzeigen...
+                        </button>
+                      </>
+                    )}
                   </p>
                 </div>
               </motion.div>
