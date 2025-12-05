@@ -50,6 +50,52 @@ const CommunityInfo = () => {
         backgroundSize: '40px 40px'
       }} />
       </div>
+      
+      {/* Floating Background Orbs */}
+      <motion.div
+        animate={{ 
+          y: [0, -30, 0],
+          x: [0, 15, 0],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{ 
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="absolute top-20 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-3xl"
+      />
+      <motion.div
+        animate={{ 
+          y: [0, 40, 0],
+          x: [0, -20, 0],
+          scale: [1, 1.15, 1]
+        }}
+        transition={{ 
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1
+        }}
+        className="absolute top-[40%] right-[5%] w-96 h-96 bg-accent/8 rounded-full blur-3xl"
+      />
+      <motion.div
+        animate={{ 
+          y: [0, -25, 0],
+          scale: [1, 1.2, 1]
+        }}
+        transition={{ 
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2
+        }}
+        className="absolute bottom-[20%] left-[20%] w-80 h-80 bg-primary/5 rounded-full blur-3xl"
+      />
+      
+      {/* Gradient Mesh */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-accent/[0.03] via-transparent to-primary/[0.03]" />
 
       <div className="container px-6 md:px-12 relative">
         <motion.div initial={{
