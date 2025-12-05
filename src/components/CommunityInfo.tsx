@@ -195,7 +195,7 @@ const CommunityInfo = () => {
             Unser Herr segne euch,
           </p>
           <p className="font-blessing text-5xl md:text-7xl text-transparent bg-clip-text bg-gradient-warm leading-relaxed">liebe Brüder und Schwestern</p>
-          <p className="text-5xl md:text-7xl mb-16">🕊️</p>
+          <p className="text-5xl md:text-7xl mb-16 text-transparent bg-clip-text bg-gradient-warm">🕊️</p>
           
           {/* Large Cross */}
           <motion.div initial={{
