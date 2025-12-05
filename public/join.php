@@ -13,18 +13,6 @@ const TWILIO_MESSAGING_SID = 'TWILIO_MESSAGING_SID_PURGED';
 // Set SMS provider: 'twilio' or 'hetzner'
 const SMS_PROVIDER = 'hetzner';
 
-// SMTP Konfiguration für Email Versand
-$SMTP_CONFIG = [
-    'host' => 'mail.your-server.de', // SMTP Server
-    'port' => 587,                // SMTP Port
-    'username' => 'info@komm-folge-mir-nach.de', // SMTP Benutzername
-    'password' => 'SMTP_PASSWORD_PURGED',    // SMTP Passwort
-    'from' => 'info@komm-folge-mir-nach.de', // Absenderadresse
-    'from_name' => 'Komm, Folge Mir Nach!'
-];
-
-const ADMIN_EMAIL="info@komm-folge-mir-nach.de";
-
 // ===================================================================
 // 2. CORS – NUR DEINE DOMAINS ERLAUBT (maximale Sicherheit)
 // ===================================================================
@@ -58,46 +46,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // (zusätzliche Absicherung gegen Missbrauch von außerhalb)
 
 // ===================================================================
-
 // 3. Parameter prüfen
 // ===================================================================
-// Service und Empfänger prüfen
 $service = strtolower($_GET['to'] ?? '');
 $mobile  = trim($_GET['mobile'] ?? '');
-$email   = trim($_GET['email'] ?? '');
 
-// Neue Parameter: message und code
-$userMessage = isset($_GET['message']) ? trim($_GET['message']) : '';
-$userCode    = isset($_GET['code']) ? trim($_GET['code']) : '';
-
-if (!in_array($service, ['sms', 'whatsapp', 'email'], true)) {
-    echo json_encode(['success' => false, 'message' => 'Parameter "to" muss "sms", "whatsapp" oder "email" sein']);
+if (!in_array($service, ['sms', 'whatsapp'], true)) {
+    echo json_encode(['success' => false, 'message' => 'Parameter "to" muss "sms" oder "whatsapp" sein']);
     exit;
 }
 
-if ($service === 'email') {
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode(['success' => false, 'message' => 'Ungültige Email-Adresse']);
-        exit;
-    }
-} else {
-    if (empty($mobile) || strlen($mobile) < 8 || strlen($mobile) > 20) {
-        echo json_encode(['success' => false, 'message' => 'Ungültige Mobilnummer']);
-        exit;
-    }
+if (empty($mobile) || strlen($mobile) < 8 || strlen($mobile) > 20) {
+    echo json_encode(['success' => false, 'message' => 'Ungültige Mobilnummer']);
+    exit;
 }
 
 // ===================================================================
 // 4. Nummer normalisieren → +49...
 // ===================================================================
-if ($service !== 'email') {
-    if (substr($mobile, 0, 2) === '00') {
-        $mobile = '+' . substr($mobile, 2);
-    } elseif ($mobile[0] === '0') {
-        $mobile = '+49' . substr($mobile, 1);
-    } elseif ($mobile[0] !== '+') {
-        $mobile = '+49' . $mobile;
-    }
+if (substr($mobile, 0, 2) === '00') {
+    $mobile = '+' . substr($mobile, 2);
+} elseif ($mobile[0] === '0') {
+    $mobile = '+49' . substr($mobile, 1);
+} elseif ($mobile[0] !== '+') {
+    $mobile = '+49' . $mobile;
 }
 
 // ===================================================================
@@ -113,40 +85,40 @@ $to = ($service === 'whatsapp') ? "whatsapp:{$mobile}" : $mobile;
 // ===================================================================
 // 6. Versand über Twilio oder Hetzner SMS
 // ===================================================================
-// ===================================================================
-// 6. Versand
-// ===================================================================
 $provider = SMS_PROVIDER;
 $result = null;
 
-if ($service === 'email') {
-    // $result = sendInvitationEmail($email, $text, $SMTP_CONFIG);
-    $result = sendInvitationEmailNative($email, $text, $SMTP_CONFIG);
-    // send a information email to admin
-    $adminEmail = ADMIN_EMAIL;
-    $adminText = "Ein Interessant mit der Email \"$email\" und Code ($userCode) will Komm, Folge Mir Nach! beitreten. Eine Einladung wurde versendet. Er schrieb folgende Nachricht:\n\n\"$userMessage\"";
-    $result = sendInvitationEmailNative($adminEmail, $adminText, $SMTP_CONFIG);
-
-} elseif ($service === 'sms' && $provider === 'hetzner') {
+if ($service === 'sms' && $provider === 'hetzner') {
+    
     $domain   = 'komm-folge-mir-nach.de';        // Hetzner SMS Konsole Domain
     $passwort = 'HETZNER_SMS_PASSWORD_PURGED';          // Hetzner SMS Konsole
+
     // $mobile ist jetzt garantiert im Format +49176... (durch deine Normalisierung oben)
+    
     if (substr($mobile, 0, 3) !== '+49') {
+        // Hetzner unterstützt nur DE-Nummern vernünftig → andere ablehnen oder Twilio fallback
         echo json_encode(['success' => false, 'message' => 'Hetzner unterstützt nur deutsche Nummern']);
         exit;
     }
+    
     $land   = '+49';                                      // immer +49
     $nummer = '0' . substr($mobile, 3);                   // +49176... → 0176...
+    // Falls die Nummer schon mit 0 anfängt (selten, aber möglich bei falscher Eingabe), korrigieren:
     $nummer = ltrim($nummer, '0');                        // führende Nullen weg außer eine
     $nummer = '0' . $nummer;                              // wieder eine 0 vorne → garantiert 01...
+
+    // Sicherstellen, dass es wirklich mit 0 anfängt und 10–11 Stellen nach der 0 hat
     if (!preg_match('/^0[1-9]\d{8,10}$/', $nummer)) {
         echo json_encode(['success' => false, 'message' => 'Ungültige deutsche Mobilnummer für Hetzner']);
         exit;
     }
+
     $absender = 'DerWeg';
+    
     require_once 'sms.php';
     $sms = new SMS('https://konsoleh.your-server.de/');
     $resultArr = $sms->send($domain, $passwort, $land, $nummer, $text, $absender);
+    
     $result = [
         'success' => $resultArr[0] == 1,
         'message' => $resultArr[1]
@@ -159,8 +131,7 @@ echo json_encode([
     'success'  => $result['success'],
     'message'  => $result['message'],
     'sent_to'  => $service,
-    'mobile'   => $mobile,
-    'email'    => $email
+    'mobile'   => $mobile
 ]);
 exit;
 
@@ -168,64 +139,6 @@ exit;
 // 7. Hetzner-Versand-Funktion
 // ===================================================================
 // ...existing code...
-
-// ===================================================================
-// 7. Email-Versand-Funktion
-// ===================================================================
-function sendInvitationEmail(string $toEmail, string $body, array $config): array
-{
-    // PHPMailer laden (muss installiert sein, z.B. via Composer)
-    require_once __DIR__ . '/PHPMailer/PHPMailer.php';
-    require_once __DIR__ . '/PHPMailer/SMTP.php';
-    require_once __DIR__ . '/PHPMailer/Exception.php';
-
-    $mail = new PHPMailer\PHPMailer\PHPMailer();
-    $mail->isSMTP();
-    $mail->Host = $config['host'];
-    $mail->Port = $config['port'];
-    $mail->SMTPAuth = true;
-    $mail->Username = $config['username'];
-    $mail->Password = $config['password'];
-    $mail->setFrom($config['from'], $config['from_name']);
-    $mail->addAddress($toEmail);
-    $mail->Subject = 'Dein Einladungslink: Komm, Folge Mir Nach!';
-    $mail->Body = $body;
-
-    if ($mail->send()) {
-        return [
-            'success' => true,
-            'message' => 'Email gesendet'
-        ];
-    } else {
-        return [
-            'success' => false,
-            'message' => 'Email Versand fehlgeschlagen: ' . $mail->ErrorInfo
-        ];
-    }
-}
-
-// ===================================================================
-// 7. Email-Versand-Funktion mit mail()
-// ===================================================================
-function sendInvitationEmailNative(string $toEmail, string $body, array $config): array
-{
-    $subject = 'Dein Einladungslink: Komm, Folge Mir Nach!';
-    $headers = "From: \"" . $config['from_name'] . "\" <" . $config['from'] . ">\r\n" .
-               "Reply-To: " . $config['from'] . "\r\n" .
-               "Content-Type: text/plain; charset=UTF-8\r\n";
-
-    if (mail($toEmail, $subject, $body, $headers)) {
-        return [
-            'success' => true,
-            'message' => 'Email gesendet (mail())'
-        ];
-    } else {
-        return [
-            'success' => false,
-            'message' => 'Email Versand fehlgeschlagen (mail())'
-        ];
-    }
-}
 
 // ===================================================================
 // 7. Twilio-Versand-Funktion
@@ -263,7 +176,7 @@ function sendViaTwilioMessagingService(string $to, string $body): array
     if ($httpCode === 201) {
         return [
             'success' => true,
-            'message' => $to && strpos($to, 'whatsapp:') === 0 ? 'WhatsApp gesendet' : 'SMS gesendet'
+            'message' => $service === 'whatsapp' ? 'WhatsApp gesendet' : 'SMS gesendet'
         ];
     }
 
