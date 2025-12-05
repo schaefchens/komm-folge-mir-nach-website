@@ -122,6 +122,10 @@ $result = null;
 if ($service === 'email') {
     // $result = sendInvitationEmail($email, $text, $SMTP_CONFIG);
     $result = sendInvitationEmailNative($email, $text, $SMTP_CONFIG);
+    // send a information email to admin
+    $adminEmail = ADMIN_EMAIL;
+    $adminText = "Ein Interessant mit der Email \"$email\" und Code ($userCode) will Komm, Folge Mir Nach! beitreten. Eine Einladung wurde versendet. Er schrieb folgende Nachricht:\n\n\"$userMessage\"";
+    $result = sendInvitationEmailNative($adminEmail, $adminText, $SMTP_CONFIG);
 
 } elseif ($service === 'sms' && $provider === 'hetzner') {
     $domain   = 'komm-folge-mir-nach.de';        // Hetzner SMS Konsole Domain
@@ -158,21 +162,15 @@ echo json_encode([
     'mobile'   => $mobile,
     'email'    => $email
 ]);
-
-// Send info email to admin in all cases
-$adminEmail = ADMIN_EMAIL;
-if (!empty($email)) {
-    $userIdent = "Email: \"$email\"";
-} elseif (!empty($mobile)) {
-    $userIdent = "Mobilnummer: \"$mobile\"";
-} else {
-    $userIdent = "(keine Kontaktdaten)";
-}
-$adminText = "Ein Interessent mit $userIdent und Code ($userCode) will Komm, Folge Mir Nach! beitreten. Eine Einladung wurde versendet. Er schrieb folgende Nachricht:\n\n\"$userMessage\"";
-sendInvitationEmailNative($adminEmail, $adminText, $SMTP_CONFIG);
-
 exit;
 
+// ===================================================================
+// 7. Hetzner-Versand-Funktion
+// ===================================================================
+// ...existing code...
+
+// ===================================================================
+// 7. Email-Versand-Funktion
 // ===================================================================
 function sendInvitationEmail(string $toEmail, string $body, array $config): array
 {
