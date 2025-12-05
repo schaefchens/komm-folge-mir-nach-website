@@ -1,9 +1,13 @@
 import Hero from "@/components/Hero";
 import CommunityInfo from "@/components/CommunityInfo";
 import SignupForm from "@/components/SignupForm";
+import ParallaxBackground from "@/components/ParallaxBackground";
 import { motion } from "framer-motion";
+
 const Index = () => {
-  return <main className="min-h-screen">
+  return (
+    <main className="min-h-screen relative">
+      <ParallaxBackground />
       <Hero />
       <CommunityInfo />
       <SignupForm />
@@ -31,6 +35,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </main>;
+    </main>
+  );
 };
+
 export default Index;
