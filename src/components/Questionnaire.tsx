@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Clock, ChevronRight } from "lucide-react";
-import QuestionnaireResults from "./QuestionnaireResults";
 
 // Timer constants (in milliseconds)
 const QUESTION_SHOW_TIME = 3000; // Time to show question before auto-revealing choices (3 seconds)
@@ -323,19 +322,6 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
       </DialogContent>
     </Dialog>
 
-    {/* Results Dialog */}
-    <QuestionnaireResults
-      open={showResults}
-      onOpenChange={(open) => {
-        setShowResults(open);
-        if (!open) {
-          onOpenChange(false); // Close the whole questionnaire when results are closed
-        }
-      }}
-      score={questionnaireScore}
-      assessment={questionnaireAssessment}
-      results={questionnaireResults}
-    />
     </>
   );
 };
