@@ -99,11 +99,12 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
 
   const handleTimeout = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    setAnswers(prev => ({ ...prev, [currentQuestion.id]: null }));
+    const updatedAnswers = { ...answers, [currentQuestion.id]: null };
+    setAnswers(updatedAnswers);
     setIsAnswered(true);
     
     setTimeout(() => {
-      moveToNextQuestion();
+      moveToNextQuestion(updatedAnswers);
     }, 1500);
   };
 
@@ -111,15 +112,19 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
     if (isAnswered) return;
     
     const currentQuestion = questions[currentQuestionIndex];
-    setAnswers(prev => ({ ...prev, [currentQuestion.id]: choice }));
+    const updatedAnswers = { ...answers, [currentQuestion.id]: choice };
+    setAnswers(updatedAnswers);
     setIsAnswered(true);
 
     setTimeout(() => {
-      moveToNextQuestion();
+      moveToNextQuestion(updatedAnswers);
     }, 800);
   };
 
-  const moveToNextQuestion = async () => {
+  const moveToNextQuestion = async (latestAnswers?: Record<string, string | null>) => {
+    // Use latest answers if provided (to include the current answer due to React's async state)
+    const finalAnswers = latestAnswers || answers;
+    
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setShowChoices(false);
@@ -133,7 +138,7 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ answers, identifier }),
+          body: JSON.stringify({ answers: finalAnswers, identifier }),
         });
 
         const data = await response.json();
@@ -143,14 +148,14 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
           setQuestionnaireScore(data.score);
           setQuestionnaireAssessment(data.assessment);
           setQuestionnaireResults(data.results);
-          onComplete(answers, data.score, data.assessment, data.results);
+          onComplete(finalAnswers, data.score, data.assessment, data.results);
         } else {
           console.error('Failed to submit answers:', data.error);
-          onComplete(answers); // Fallback without score
+          onComplete(finalAnswers); // Fallback without score
         }
       } catch (error) {
         console.error('Error submitting answers:', error);
-        onComplete(answers); // Fallback without score
+        onComplete(finalAnswers); // Fallback without score
       }
     }
   };
