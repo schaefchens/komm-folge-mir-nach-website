@@ -23,7 +23,7 @@ interface QuestionnaireProps {
   onProceedToSignup?: (resultsSummary: string) => void;
 }
 
-const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup }: QuestionnaireProps) => {
+const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup, identifier }: QuestionnaireProps & { identifier: string }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showIntro, setShowIntro] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -41,7 +41,8 @@ const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup }: Qu
     if (open) {
       const fetchQuestions = async () => {
         try {
-          const response = await fetch('/questionaire.php');
+          const url = identifier ? `/questionaire.php?identifier=${encodeURIComponent(identifier)}` : '/questionaire.php';
+          const response = await fetch(url);
           const data = await response.json();
 
           if (data.success && data.questions) {
@@ -134,7 +135,7 @@ const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup }: Qu
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ answers }),
+          body: JSON.stringify({ answers, identifier }),
         });
 
         const data = await response.json();

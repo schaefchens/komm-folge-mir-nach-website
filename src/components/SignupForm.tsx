@@ -17,6 +17,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Generate cryptographic identifier hash from contact info
+const generateIdentifier = async (contact: string, service: string): Promise<string> => {
+  const input = service === 'email' ? contact.toLowerCase().trim() : contact.replace(/\s+/g, '');
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+};
+
 const SignupForm = () => {
   const [contact, setContact] = useState("");
   const [service, setService] = useState<"sms" | "email">("sms");
@@ -32,6 +42,7 @@ const SignupForm = () => {
   const [questionnaireResults, setQuestionnaireResults] = useState<any[] | null>(null);
   const [questionnaireScore, setQuestionnaireScore] = useState<number | null>(null);
   const [questionnaireAssessment, setQuestionnaireAssessment] = useState<string | null>(null);
+  const [questionnaireIdentifier, setQuestionnaireIdentifier] = useState<string>('');
   const {
     toast
   } = useToast();
@@ -39,6 +50,11 @@ const SignupForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contact.trim()) return;
+
+    // Generate identifier for questionnaire
+    const identifier = await generateIdentifier(contact, service);
+    setQuestionnaireIdentifier(identifier);
+
     setShowQuestionnaire(true);
   };
   const handleQuestionnaireComplete = async (
@@ -380,6 +396,7 @@ const SignupForm = () => {
         onComplete={handleQuestionnaireComplete}
         onOpenChange={setShowQuestionnaire}
         onProceedToSignup={handleProceedToSignup}
+        identifier={questionnaireIdentifier}
       />
       
       {/* Email Warning Modal */}

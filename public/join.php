@@ -66,10 +66,35 @@ $service = strtolower($_GET['to'] ?? '');
 $mobile  = trim($_GET['mobile'] ?? '');
 $email   = trim($_GET['email'] ?? '');
 
-// Neue Parameter: message, code und questionnaire_results
+// Neue Parameter: message und code
 $userMessage = isset($_GET['message']) ? trim($_GET['message']) : '';
 $userCode    = isset($_GET['code']) ? trim($_GET['code']) : '';
-$questionnaireResults = isset($_GET['questionnaire_results']) ? $_GET['questionnaire_results'] : null;
+
+// Generate identifier and load questionnaire results from disk
+$questionnaireResults = null;
+if (!empty($email) || !empty($mobile)) {
+    $contactForHash = !empty($email) ? strtolower(trim($email)) : preg_replace('/\s+/', '', $mobile);
+    $identifier = substr(hash('sha256', $contactForHash), 0, 32);
+
+    $questionnaireFile = __DIR__ . '/questionnaires/' . $identifier . '.json';
+    if (file_exists($questionnaireFile)) {
+        $questionnaireData = json_decode(file_get_contents($questionnaireFile), true);
+        if ($questionnaireData) {
+            $questionnaireResults = "Punktzahl: {$questionnaireData['score']}%\n";
+            $questionnaireResults .= "Richtige Antworten: {$questionnaireData['correctAnswers']}/{$questionnaireData['totalQuestions']}\n";
+            $questionnaireResults .= "Bewertung: {$questionnaireData['assessment']}\n\n";
+            $questionnaireResults .= "Detailierte Ergebnisse:\n";
+
+            foreach ($questionnaireData['results'] as $index => $result) {
+                $status = $result['isCorrect'] ? '✓' : ($result['userAnswer'] === null ? '⏰' : '✗');
+                $questionShort = substr($result['question'], 0, 50) . (strlen($result['question']) > 50 ? '...' : '');
+                $questionnaireResults .= ($index + 1) . ". {$questionShort}\n";
+                $questionnaireResults .= "   Antwort: " . ($result['userAnswer'] ?: 'Zeit abgelaufen') . "\n";
+                $questionnaireResults .= "   Korrekt: {$result['correctAnswer']} {$status}\n\n";
+            }
+        }
+    }
+}
 
 if (!in_array($service, ['sms', 'whatsapp', 'email'], true)) {
     echo json_encode(['success' => false, 'message' => 'Parameter "to" muss "sms", "whatsapp" oder "email" sein']);

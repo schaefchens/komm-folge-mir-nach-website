@@ -4,6 +4,12 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Create questionnaires directory if it doesn't exist
+$questionnairesDir = __DIR__ . '/questionnaires';
+if (!is_dir($questionnairesDir)) {
+    mkdir($questionnairesDir, 0755, true);
+}
+
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -76,6 +82,9 @@ $questions = [
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        // Get identifier from query parameter
+        $identifier = isset($_GET['identifier']) ? trim($_GET['identifier']) : null;
+
         // Return all questions (without correct answers for security)
         $publicQuestions = array_map(function($q) {
             return [
@@ -87,7 +96,8 @@ try {
 
         echo json_encode([
             'success' => true,
-            'questions' => $publicQuestions
+            'questions' => $publicQuestions,
+            'identifier' => $identifier
         ]);
 
     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -104,6 +114,7 @@ try {
         }
 
         $userAnswers = $input['answers'];
+        $identifier = isset($input['identifier']) ? trim($input['identifier']) : null;
         $totalQuestions = count($questions);
         $correctAnswers = 0;
         $results = [];
@@ -162,6 +173,23 @@ try {
             $assessment = 'Einführendes Bibelwissen. Die Bibel bietet noch viele Schätze zu entdecken.';
         } else {
             $assessment = 'Du stehst am Anfang deiner biblischen Entdeckungsreise. Jeder Anfang ist wertvoll!';
+        }
+
+        // Save results to disk if identifier is provided
+        if ($identifier) {
+            $resultData = [
+                'identifier' => $identifier,
+                'timestamp' => date('Y-m-d H:i:s'),
+                'score' => $score,
+                'correctAnswers' => $correctAnswers,
+                'totalQuestions' => $totalQuestions,
+                'assessment' => $assessment,
+                'results' => $results,
+                'userAnswers' => $userAnswers
+            ];
+
+            $filename = $questionnairesDir . '/' . $identifier . '.json';
+            file_put_contents($filename, json_encode($resultData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
         echo json_encode([
