@@ -42,7 +42,9 @@ const SignupForm = () => {
   const [showEmailWarningModal, setShowEmailWarningModal] = useState(false);
   const [showFullPrivacy, setShowFullPrivacy] = useState(false);
   const [questionnaireResults, setQuestionnaireResults] = useState<any[] | null>(null);
-  const [questionnaireScore, setQuestionnaireScore] = useState<number | null>(null);
+  const [questionnaireOverallScore, setQuestionnaireOverallScore] = useState<number | null>(null);
+  const [questionnaireOverallPercentage, setQuestionnaireOverallPercentage] = useState<number | null>(null);
+  const [questionnaireDimensionScores, setQuestionnaireDimensionScores] = useState<Record<string, any> | null>(null);
   const [questionnaireAssessment, setQuestionnaireAssessment] = useState<string | null>(null);
   const [questionnaireIdentifier, setQuestionnaireIdentifier] = useState<string>('');
   const {
@@ -61,21 +63,43 @@ const SignupForm = () => {
   };
   const handleQuestionnaireComplete = async (
     answers: Record<string, string | null>,
-    score?: number,
+    overall_percentage?: number,
     assessment?: string,
     results?: any[]
   ) => {
     // Store questionnaire results
-    setQuestionnaireResults(results);
-    setQuestionnaireScore(score);
-    setQuestionnaireAssessment(assessment);
+    setQuestionnaireResults(results || []);
+    setQuestionnaireOverallPercentage(overall_percentage || 0);
+    setQuestionnaireAssessment(assessment || '');
+
+    // Extract dimension scores from results if available
+    if (results && results.length > 0) {
+      const dimensionScores: Record<string, any> = {};
+      results.forEach((result: any) => {
+        if (result.dimension && !dimensionScores[result.dimension]) {
+          // Calculate dimension score from results
+          const dimensionResults = results.filter((r: any) => r.dimension === result.dimension && r.answered);
+          if (dimensionResults.length > 0) {
+            const avgScore = dimensionResults.reduce((sum: number, r: any) => sum + (r.score / r.maxScore), 0) / dimensionResults.length;
+            dimensionScores[result.dimension] = {
+              label: result.dimension, // Simplified - would need proper mapping
+              score: avgScore * 5,
+              percentage: Math.round(avgScore * 100),
+              questions_answered: dimensionResults.length
+            };
+          }
+        }
+      });
+      setQuestionnaireDimensionScores(dimensionScores);
+      setQuestionnaireOverallScore((overall_percentage || 0) / 20); // Convert percentage to 0-5 scale
+    }
 
     // Send SMS/email immediately after questionnaire completion
     setIsSubmitting(true);
     try {
       // Build query parameters
       const contactParam = service === "sms" ? "mobile" : "email";
-      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&${contactParam}=${encodeURIComponent(contact)}`;
+      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&${contactParam}=${encodeURIComponent(contact)}&questionnaire=glaubensfragebogen_v1`;
       if (message.trim()) {
         url += `&message=${encodeURIComponent(message)}`;
       }
@@ -401,16 +425,20 @@ const SignupForm = () => {
                 {/* Card */}
                 <div className="relative bg-card rounded-3xl p-8 md:p-12 shadow-elegant border border-border/50">
                   <QuestionnaireResults
-                    score={questionnaireScore || 0}
+                    overall_score={questionnaireOverallScore || 0}
+                    overall_percentage={questionnaireOverallPercentage || 0}
+                    dimension_scores={questionnaireDimensionScores || {}}
                     assessment={questionnaireAssessment || ''}
-                    results={questionnaireResults}
+                    results={questionnaireResults || []}
                     onClose={() => {
                       // Reset form when results are closed
                       setContact("");
                       setMessage("");
                       setInviteCode("");
                       setQuestionnaireResults(null);
-                      setQuestionnaireScore(null);
+                      setQuestionnaireOverallScore(null);
+                      setQuestionnaireOverallPercentage(null);
+                      setQuestionnaireDimensionScores(null);
                       setQuestionnaireAssessment(null);
                       setQuestionnaireIdentifier('');
                       setCurrentView("intent");

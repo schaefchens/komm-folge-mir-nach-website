@@ -1,0 +1,371 @@
+{
+  "id": "glaubensfragebogen_v1",
+  "title": "Fragebogen zur Einordnung des christlichen Glaubens",
+  "description": "Mehrstufiger Fragebogen (Wissen, Überzeugung, Beziehung, Praxis, Reife, biblische Orientierung).",
+  "language": "de",
+  "version": "1.1",
+  "author": "Gemeinschaft Komm, Folge Mir Nach!",
+  "date_created": "2025-12-07",
+  "target_group": "Erwachsene Christen und Interessierte",
+  "dimensions": [
+    { "id": "knowledge", "label": "Biblisches Wissen" },
+    { "id": "belief", "label": "Theologische Überzeugungen" },
+    { "id": "trust", "label": "Vertrauen / Beziehung zu Gott" },
+    { "id": "practice", "label": "Gelebter Glaube" },
+    { "id": "maturity", "label": "Geistliche Reife" },
+    { "id": "biblical_alignment", "label": "Biblische Orientierung" }
+  ],
+  "sections": [
+    {
+      "id": "sec_knowledge",
+      "title": "Biblisches Wissen",
+      "description": "Grundlegende Inhalte der Bibel."
+    },
+    {
+      "id": "sec_belief",
+      "title": "Theologische Überzeugungen",
+      "description": "Wie stark stimmst du zentralen Aussagen zu?"
+    },
+    {
+      "id": "sec_trust",
+      "title": "Vertrauen / Beziehung zu Gott",
+      "description": "Innere Hingabe und Vertrauen."
+    },
+    {
+      "id": "sec_practice",
+      "title": "Gelebter Glaube",
+      "description": "Wie zeigt sich dein Glaube im Alltag?"
+    },
+    {
+      "id": "sec_maturity",
+      "title": "Geistliche Reife",
+      "description": "Charakter und Frucht des Geistes."
+    },
+    {
+      "id": "sec_biblical_alignment",
+      "title": "Biblische Orientierung",
+      "description": "Treffst du Entscheidungen nach biblischen Maßstäben?"
+    }
+  ],
+  "scales": {
+    "likert_1_5": {
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "stimme überhaupt nicht zu",
+        "2": "stimme eher nicht zu",
+        "3": "teils/teils",
+        "4": "stimme eher zu",
+        "5": "stimme voll zu"
+      }
+    },
+    "frequency_bible_reading": {
+      "min": 0,
+      "max": 5,
+      "labels": {
+        "nie": "Nie",
+        "selten": "Seltener als 1x pro Monat",
+        "monatlich": "Ca. 1x pro Monat",
+        "woechentlich": "Mehrmals im Monat",
+        "taeglich": "Täglich oder fast täglich"
+      },
+      "values": {
+        "nie": 0,
+        "selten": 1,
+        "monatlich": 2,
+        "woechentlich": 3,
+        "taeglich": 5
+      }
+    },
+    "frequency_prayer": {
+      "min": 0,
+      "max": 5,
+      "labels": {
+        "nie": "Nie",
+        "selten": "Seltener als 1x pro Woche",
+        "woechentlich": "Ca. 1x pro Woche",
+        "mehrere_woeche": "Mehrmals pro Woche",
+        "taeglich": "Täglich oder mehrmals täglich"
+      },
+      "values": {
+        "nie": 0,
+        "selten": 1,
+        "woechentlich": 2,
+        "mehrere_woeche": 4,
+        "taeglich": 5
+      }
+    }
+  },
+  "scoring_rules": {
+    "per_dimension": {
+      "knowledge": { "method": "average", "max_score": 5 },
+      "belief": { "method": "average", "max_score": 5 },
+      "trust": { "method": "average", "max_score": 5 },
+      "practice": { "method": "average", "max_score": 5 },
+      "maturity": { "method": "average", "max_score": 5 },
+      "biblical_alignment": { "method": "average", "max_score": 5 }
+    },
+    "overall": {
+      "method": "weighted_average",
+      "weights": {
+        "knowledge": 0.8,
+        "belief": 1.0,
+        "trust": 1.2,
+        "practice": 1.0,
+        "maturity": 1.0,
+        "biblical_alignment": 1.2
+      }
+    }
+  },
+  "questions": [
+    {
+      "id": "q_knowledge_1",
+      "section_id": "sec_knowledge",
+      "dimension": "knowledge",
+      "type": "single_choice",
+      "text": "Wer ist Jesus Christus nach dem Neuen Testament?",
+      "required": true,
+      "options": [
+        { "value": "nur_mensch", "label": "Nur ein historischer Mensch" },
+        { "value": "prophet", "label": "Ein Prophet, aber nicht Gottes Sohn" },
+        { "value": "sohn_gottes", "label": "Sohn Gottes und Retter" },
+        { "value": "weisheitslehrer", "label": "Weisheitslehrer ohne göttliche Autorität" }
+      ],
+      "scoring": {
+        "sohn_gottes": 5,
+        "prophet": 2,
+        "weisheitslehrer": 1,
+        "nur_mensch": 0
+      }
+    },
+    {
+      "id": "q_knowledge_2",
+      "section_id": "sec_knowledge",
+      "dimension": "knowledge",
+      "type": "single_choice",
+      "text": "Was bedeutet das Wort 'Evangelium'?",
+      "required": true,
+      "options": [
+        { "value": "gesetz", "label": "Das Gesetz Gottes" },
+        { "value": "geschichte", "label": "Die Geschichte Israels" },
+        { "value": "frohe_botschaft", "label": "Die frohe Botschaft von Jesus" },
+        { "value": "prophezeiung", "label": "Eine Prophezeiung" }
+      ],
+      "scoring": {
+        "frohe_botschaft": 5,
+        "geschichte": 2,
+        "gesetz": 1,
+        "prophezeiung": 0
+      }
+    },
+    {
+      "id": "q_knowledge_3",
+      "section_id": "sec_knowledge",
+      "dimension": "knowledge",
+      "type": "single_choice",
+      "text": "Wie viele Jünger hatte Jesus ursprünglich?",
+      "required": true,
+      "options": [
+        { "value": "7", "label": "7" },
+        { "value": "10", "label": "10" },
+        { "value": "12", "label": "12" },
+        { "value": "70", "label": "70" }
+      ],
+      "scoring": {
+        "12": 5,
+        "10": 2,
+        "7": 1,
+        "70": 0
+      }
+    },
+    {
+      "id": "q_belief_1",
+      "section_id": "sec_belief",
+      "dimension": "belief",
+      "type": "likert",
+      "text": "Ich glaube, dass Jesus der Sohn Gottes ist.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_belief_2",
+      "section_id": "sec_belief",
+      "dimension": "belief",
+      "type": "likert",
+      "text": "Die Bibel ist Gottes Wort und daher verlässlich.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_belief_3",
+      "section_id": "sec_belief",
+      "dimension": "belief",
+      "type": "likert",
+      "text": "Jesus ist für meine Sünden am Kreuz gestorben.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_belief_4",
+      "section_id": "sec_belief",
+      "dimension": "belief",
+      "type": "likert",
+      "text": "Jesus ist auferstanden und lebt heute.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_trust_1",
+      "section_id": "sec_trust",
+      "dimension": "trust",
+      "type": "likert",
+      "text": "Ich vertraue darauf, dass Gott mich in meinem Leben führt.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_trust_2",
+      "section_id": "sec_trust",
+      "dimension": "trust",
+      "type": "likert",
+      "text": "Gott liebt mich bedingungslos.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_trust_3",
+      "section_id": "sec_trust",
+      "dimension": "trust",
+      "type": "likert",
+      "text": "Ich kann Gott in jeder Situation um Hilfe bitten.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_practice_1",
+      "section_id": "sec_practice",
+      "dimension": "practice",
+      "type": "single_choice",
+      "text": "Wie oft liest du in der Bibel?",
+      "required": true,
+      "scale_ref": "frequency_bible_reading",
+      "options": [
+        { "value": "nie", "label": "Nie" },
+        { "value": "selten", "label": "Seltener als 1x pro Monat" },
+        { "value": "monatlich", "label": "Ca. 1x pro Monat" },
+        { "value": "woechentlich", "label": "Mehrmals im Monat" },
+        { "value": "taeglich", "label": "Täglich oder fast täglich" }
+      ]
+    },
+    {
+      "id": "q_practice_2",
+      "section_id": "sec_practice",
+      "dimension": "practice",
+      "type": "single_choice",
+      "text": "Wie oft betest du?",
+      "required": true,
+      "scale_ref": "frequency_prayer",
+      "options": [
+        { "value": "nie", "label": "Nie" },
+        { "value": "selten", "label": "Seltener als 1x pro Woche" },
+        { "value": "woechentlich", "label": "Ca. 1x pro Woche" },
+        { "value": "mehrere_woeche", "label": "Mehrmals pro Woche" },
+        { "value": "taeglich", "label": "Täglich oder mehrmals täglich" }
+      ]
+    },
+    {
+      "id": "q_practice_3",
+      "section_id": "sec_practice",
+      "dimension": "practice",
+      "type": "likert",
+      "text": "Ich teile meinen Glauben mit anderen Menschen.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_maturity_1",
+      "section_id": "sec_maturity",
+      "dimension": "maturity",
+      "type": "likert",
+      "text": "Wie ausgeprägt ist bei dir Geduld mit anderen Menschen?",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_maturity_2",
+      "section_id": "sec_maturity",
+      "dimension": "maturity",
+      "type": "likert",
+      "text": "Ich vergebe anderen, die mir Unrecht getan haben.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_maturity_3",
+      "section_id": "sec_maturity",
+      "dimension": "maturity",
+      "type": "likert",
+      "text": "Ich zeige Liebe auch gegenüber Menschen, die mir unsympathisch sind.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_maturity_4",
+      "section_id": "sec_maturity",
+      "dimension": "maturity",
+      "type": "likert",
+      "text": "Ich bin dankbar für das, was Gott mir gegeben hat.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_bibalign_1",
+      "section_id": "sec_biblical_alignment",
+      "dimension": "biblical_alignment",
+      "type": "single_choice",
+      "text": "Worauf gründest du in Konfliktsituationen deine Entscheidungen am ehesten?",
+      "required": true,
+      "options": [
+        { "value": "eigene_gefuehle", "label": "Auf meine spontanen Gefühle" },
+        { "value": "meinung_andere", "label": "Auf das, was andere von mir erwarten" },
+        { "value": "biblische_prinzipien", "label": "Auf biblische Prinzipien und Gebet" }
+      ],
+      "scoring": {
+        "eigene_gefuehle": 1,
+        "meinung_andere": 2,
+        "biblische_prinzipien": 5
+      }
+    },
+    {
+      "id": "q_bibalign_2",
+      "section_id": "sec_biblical_alignment",
+      "dimension": "biblical_alignment",
+      "type": "likert",
+      "text": "Die Bibel hilft mir bei wichtigen Lebensentscheidungen.",
+      "required": true,
+      "scale_ref": "likert_1_5"
+    },
+    {
+      "id": "q_bibalign_3",
+      "section_id": "sec_biblical_alignment",
+      "dimension": "biblical_alignment",
+      "type": "single_choice",
+      "text": "Wie wichtig ist es dir, Gottes Willen in deinem Leben zu erkennen?",
+      "required": true,
+      "options": [
+        { "value": "unwichtig", "label": "Unwichtig" },
+        { "value": "weniger_wichtig", "label": "Weniger wichtig" },
+        { "value": "neutral", "label": "Neutral" },
+        { "value": "ziemlich_wichtig", "label": "Ziemlich wichtig" },
+        { "value": "sehr_wichtig", "label": "Sehr wichtig" }
+      ],
+      "scoring": {
+        "sehr_wichtig": 5,
+        "ziemlich_wichtig": 4,
+        "neutral": 3,
+        "weniger_wichtig": 2,
+        "unwichtig": 1
+      }
+    }
+  ]
+}

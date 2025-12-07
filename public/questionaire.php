@@ -16,87 +16,191 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Define questions with correct answers
-$questions = [
-    [
-        'id' => 'q1',
-        'title' => 'Wer führte das Volk Israel aus Ägypten?',
-        'choices' => ['Mose', 'Abraham', 'David'],
-        'correct' => 'Mose'
-    ],
-    [
-        'id' => 'q2',
-        'title' => 'In welcher Stadt wurde Jesus geboren?',
-        'choices' => ['Bethlehem', 'Nazareth', 'Jerusalem'],
-        'correct' => 'Bethlehem'
-    ],
-    [
-        'id' => 'q3',
-        'title' => 'Wie viele Jünger hatte Jesus?',
-        'choices' => ['12', '7', '10'],
-        'correct' => '12'
-    ],
-    [
-        'id' => 'q4',
-        'title' => 'Wer verriet Jesus?',
-        'choices' => ['Judas', 'Petrus', 'Thomas'],
-        'correct' => 'Judas'
-    ],
-    [
-        'id' => 'q5',
-        'title' => 'Was bedeutet das Wort \'Evangelium\'?',
-        'choices' => ['Gute Nachricht', 'Heilige Schrift', 'Gottes Wort'],
-        'correct' => 'Gute Nachricht'
-    ],
-    [
-        'id' => 'q6',
-        'title' => 'Welches ist das erste Buch der Bibel?',
-        'choices' => ['Genesis', 'Exodus', 'Matthäus'],
-        'correct' => 'Genesis'
-    ],
-    [
-        'id' => 'q7',
-        'title' => 'Was ist das größte Gebot laut Jesus?',
-        'choices' => ['Gott und den Nächsten lieben', 'Nicht töten', 'Nicht stehlen'],
-        'correct' => 'Gott und den Nächsten lieben'
-    ],
-    [
-        'id' => 'q8',
-        'title' => 'Wer schrieb die meisten Briefe im Neuen Testament?',
-        'choices' => ['Paulus', 'Petrus', 'Johannes'],
-        'correct' => 'Paulus'
-    ],
-    [
-        'id' => 'q9',
-        'title' => 'Was bedeutet Nachfolge Jesu?',
-        'choices' => ['Sein Leben nach Jesu Lehren ausrichten', 'In die Kirche gehen', 'Die Bibel besitzen'],
-        'correct' => 'Sein Leben nach Jesu Lehren ausrichten'
-    ],
-    [
-        'id' => 'q10',
-        'title' => 'Was geschah am dritten Tag nach Jesu Kreuzigung?',
-        'choices' => ['Seine Auferstehung', 'Seine Himmelfahrt', 'Pfingsten'],
-        'correct' => 'Seine Auferstehung'
-    ]
-];
+// Load questionnaire from JSON file
+function loadQuestionnaire($questionnaireId) {
+    global $questionnairesDir;
+
+    $filename = $questionnaireId . '.json';
+    $filepath = $questionnairesDir . '/' . $filename;
+
+    if (!file_exists($filepath)) {
+        return null;
+    }
+
+    $json = file_get_contents($filepath);
+    $questionnaire = json_decode($json, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return null;
+    }
+
+    return $questionnaire;
+}
+
+// Validate questionnaire structure
+function validateQuestionnaire($questionnaire) {
+    if (!isset($questionnaire['id'], $questionnaire['questions'], $questionnaire['dimensions'])) {
+        return false;
+    }
+
+    foreach ($questionnaire['questions'] as $question) {
+        if (!isset($question['id'], $question['type'], $question['text'])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Get questionnaire ID from request
+$questionnaireId = isset($_GET['questionnaire']) ? trim($_GET['questionnaire']) : 'glaubensfragebogen_v1';
+
+// Load questionnaire
+$questionnaire = loadQuestionnaire($questionnaireId);
+if (!$questionnaire || !validateQuestionnaire($questionnaire)) {
+    http_response_code(404);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Questionnaire not found or invalid: ' . $questionnaireId
+    ]);
+    exit();
+}
+
+// Generate assessment text based on scores
+function generateAssessment($overallScore, $dimensionResults) {
+    $score = round($overallScore, 1);
+
+    // Overall assessment based on score
+    $overallText = '';
+    if ($score >= 4.5) {
+        $overallText = 'Hervorragende christliche Reife! Du zeigst ein tiefes Verständnis und eine starke Praxis des christlichen Glaubens.';
+    } elseif ($score >= 4.0) {
+        $overallText = 'Sehr gute christliche Grundlagen! Du hast eine solide Basis in Glauben, Praxis und Reife entwickelt.';
+    } elseif ($score >= 3.5) {
+        $overallText = 'Gute christliche Entwicklung! Du bist auf einem guten Weg mit Raum für Wachstum in verschiedenen Bereichen.';
+    } elseif ($score >= 3.0) {
+        $overallText = 'Solide christliche Grundlagen! Es gibt Bereiche, in denen du wachsen kannst, aber du hast eine gute Basis.';
+    } elseif ($score >= 2.5) {
+        $overallText = 'Entwickelnde christliche Identität! Du bist auf der Suche und hast bereits einige wichtige Schritte gemacht.';
+    } elseif ($score >= 2.0) {
+        $overallText = 'Anfängliche christliche Entdeckung! Du stehst am Beginn deiner Glaubensreise.';
+    } else {
+        $overallText = 'Beginn der christlichen Entdeckungsreise! Jeder Anfang ist wertvoll und Gott freut sich über jeden Schritt.';
+    }
+
+    // Dimension-specific feedback
+    $dimensionFeedback = [];
+
+    foreach ($dimensionResults as $id => $result) {
+        $dimScore = $result['score'];
+        $feedback = '';
+
+        switch ($id) {
+            case 'knowledge':
+                if ($dimScore >= 4) $feedback = 'Exzellentes Bibelwissen!';
+                elseif ($dimScore >= 3) $feedback = 'Gutes Bibelverständnis.';
+                elseif ($dimScore >= 2) $feedback = 'Grundlegendes Bibelwissen vorhanden.';
+                else $feedback = 'Raum für biblisches Lernen.';
+                break;
+
+            case 'belief':
+                if ($dimScore >= 4) $feedback = 'Starke theologische Überzeugungen!';
+                elseif ($dimScore >= 3) $feedback = 'Solide Glaubensgrundlagen.';
+                elseif ($dimScore >= 2) $feedback = 'Entwickelnde Glaubensüberzeugungen.';
+                else $feedback = 'Bereich für Glaubensvertiefung.';
+                break;
+
+            case 'trust':
+                if ($dimScore >= 4) $feedback = 'Tiefes Gottvertrauen!';
+                elseif ($dimScore >= 3) $feedback = 'Gutes Vertrauensverhältnis zu Gott.';
+                elseif ($dimScore >= 2) $feedback = 'Wachsendes Gottvertrauen.';
+                else $feedback = 'Raum für Vertrauensentwicklung.';
+                break;
+
+            case 'practice':
+                if ($dimScore >= 4) $feedback = 'Sehr aktive Glaubenspraxis!';
+                elseif ($dimScore >= 3) $feedback = 'Regelmäßige Glaubenspraxis.';
+                elseif ($dimScore >= 2) $feedback = 'Entwickelnde Glaubenspraxis.';
+                else $feedback = 'Bereich für praktische Umsetzung.';
+                break;
+
+            case 'maturity':
+                if ($dimScore >= 4) $feedback = 'Hohe geistliche Reife!';
+                elseif ($dimScore >= 3) $feedback = 'Gute Charakterentwicklung.';
+                elseif ($dimScore >= 2) $feedback = 'Wachsende Reife.';
+                else $feedback = 'Raum für Charakterwachstum.';
+                break;
+
+            case 'biblical_alignment':
+                if ($dimScore >= 4) $feedback = 'Starke biblische Orientierung!';
+                elseif ($dimScore >= 3) $feedback = 'Gute Entscheidungsfindung nach biblischen Maßstäben.';
+                elseif ($dimScore >= 2) $feedback = 'Entwickelnde biblische Orientierung.';
+                else $feedback = 'Bereich für biblische Entscheidungsfindung.';
+                break;
+        }
+
+        $dimensionFeedback[] = $result['label'] . ': ' . $feedback;
+    }
+
+    return $overallText . "\n\n" . 'Detailierte Einschätzung:' . "\n" . implode("\n", $dimensionFeedback);
+}
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Get identifier from query parameter
         $identifier = isset($_GET['identifier']) ? trim($_GET['identifier']) : null;
 
-        // Return all questions (without correct answers for security)
-        $publicQuestions = array_map(function($q) {
-            return [
-                'id' => $q['id'],
-                'title' => $q['title'],
-                'choices' => $q['choices']
+        // Return questionnaire data
+        $publicQuestions = [];
+        foreach ($questionnaire['questions'] as $question) {
+            $publicQuestion = [
+                'id' => $question['id'],
+                'section_id' => $question['section_id'],
+                'dimension' => $question['dimension'],
+                'type' => $question['type'],
+                'text' => $question['text'],
+                'required' => $question['required'] ?? true
             ];
-        }, $questions);
+
+            // Add type-specific data
+            if ($question['type'] === 'single_choice') {
+                $publicQuestion['options'] = array_map(function($option) {
+                    return [
+                        'value' => $option['value'],
+                        'label' => $option['label']
+                    ];
+                }, $question['options']);
+            } elseif ($question['type'] === 'likert') {
+                $scale = $questionnaire['scales'][$question['scale_ref']];
+                $publicQuestion['scale'] = $scale;
+            }
+
+            $publicQuestions[] = $publicQuestion;
+        }
+
+        // Group questions by section
+        $sections = [];
+        foreach ($questionnaire['sections'] as $section) {
+            $sectionQuestions = array_filter($publicQuestions, function($q) use ($section) {
+                return $q['section_id'] === $section['id'];
+            });
+            $sections[] = [
+                'id' => $section['id'],
+                'title' => $section['title'],
+                'description' => $section['description'],
+                'questions' => array_values($sectionQuestions)
+            ];
+        }
 
         echo json_encode([
             'success' => true,
-            'questions' => $publicQuestions,
+            'questionnaire' => [
+                'id' => $questionnaire['id'],
+                'title' => $questionnaire['title'],
+                'description' => $questionnaire['description'],
+                'dimensions' => $questionnaire['dimensions']
+            ],
+            'sections' => $sections,
             'identifier' => $identifier
         ]);
 
@@ -115,15 +219,24 @@ try {
 
         $userAnswers = $input['answers'];
         $identifier = isset($input['identifier']) ? trim($input['identifier']) : null;
-        $totalQuestions = count($questions);
-        $correctAnswers = 0;
-        $results = [];
 
         // Create lookup map for questions
         $questionMap = [];
-        foreach ($questions as $q) {
+        foreach ($questionnaire['questions'] as $q) {
             $questionMap[$q['id']] = $q;
         }
+
+        // Initialize scoring data
+        $dimensionScores = [];
+        $dimensionCounts = [];
+        foreach ($questionnaire['dimensions'] as $dimension) {
+            $dimensionScores[$dimension['id']] = 0;
+            $dimensionCounts[$dimension['id']] = 0;
+        }
+
+        $results = [];
+        $totalAnswered = 0;
+        $totalRequired = 0;
 
         // Evaluate each answer
         foreach ($userAnswers as $questionId => $userAnswer) {
@@ -132,58 +245,124 @@ try {
             }
 
             $question = $questionMap[$questionId];
-            $isCorrect = false;
+            $score = 0;
+            $maxScore = 5; // Default max score
+            $answered = false;
 
-            // Handle different answer types
-            if ($userAnswer === null) {
-                $isCorrect = false; // Timeout/no answer
-            } elseif ($userAnswer === 'Keine Antwort passt') {
-                $isCorrect = false; // "None of the answers fit" is considered incorrect
+            // Handle different question types
+            if ($userAnswer === null || $userAnswer === '') {
+                // No answer
+                $answered = false;
             } else {
-                $isCorrect = ($userAnswer === $question['correct']);
+                $answered = true;
+                $totalAnswered++;
+
+                if ($question['type'] === 'single_choice') {
+                    // Check if question has custom scoring
+                    if (isset($question['scoring'][$userAnswer])) {
+                        $score = $question['scoring'][$userAnswer];
+                    } elseif (isset($question['scale_ref'])) {
+                        // Use scale values if defined
+                        $scale = $questionnaire['scales'][$question['scale_ref']];
+                        if (isset($scale['values'][$userAnswer])) {
+                            $score = $scale['values'][$userAnswer];
+                            $maxScore = max($scale['values']);
+                        } else {
+                            // Default to treating answer as numeric
+                            $score = is_numeric($userAnswer) ? (int)$userAnswer : 0;
+                        }
+                    }
+                } elseif ($question['type'] === 'likert') {
+                    // Likert scale - answer should be numeric
+                    $score = is_numeric($userAnswer) ? (int)$userAnswer : 0;
+                    $scale = $questionnaire['scales'][$question['scale_ref']];
+                    $maxScore = $scale['max'];
+                }
             }
 
-            if ($isCorrect) {
-                $correctAnswers++;
+            if ($question['required']) {
+                $totalRequired++;
+            }
+
+            // Add to dimension score
+            $dimension = $question['dimension'];
+            if ($answered) {
+                $dimensionScores[$dimension] += $score;
+                $dimensionCounts[$dimension]++;
             }
 
             $results[] = [
                 'questionId' => $questionId,
-                'question' => $question['title'],
+                'question' => $question['text'],
+                'section_id' => $question['section_id'],
+                'dimension' => $question['dimension'],
                 'userAnswer' => $userAnswer,
-                'correctAnswer' => $question['correct'],
-                'isCorrect' => $isCorrect
+                'score' => $score,
+                'maxScore' => $maxScore,
+                'answered' => $answered,
+                'required' => $question['required']
             ];
         }
 
-        // Calculate score percentage
-        $score = $totalQuestions > 0 ? round(($correctAnswers / $totalQuestions) * 100, 1) : 0;
+        // Calculate dimension scores
+        $dimensionResults = [];
+        foreach ($questionnaire['dimensions'] as $dimension) {
+            $id = $dimension['id'];
+            $count = $dimensionCounts[$id];
+            $rawScore = $dimensionScores[$id];
 
-        // Determine assessment level based on score
-        $assessment = '';
-        if ($score >= 90) {
-            $assessment = 'Ausgezeichnetes Bibelwissen! Du hast ein tiefes Verständnis der biblischen Grundlagen.';
-        } elseif ($score >= 80) {
-            $assessment = 'Sehr gutes Bibelwissen! Du bist gut mit den biblischen Geschichten vertraut.';
-        } elseif ($score >= 70) {
-            $assessment = 'Gutes Bibelwissen! Du hast solide Grundkenntnisse der Bibel.';
-        } elseif ($score >= 60) {
-            $assessment = 'Grundlegendes Bibelwissen vorhanden. Es gibt Raum für mehr Entdeckung.';
-        } elseif ($score >= 40) {
-            $assessment = 'Einführendes Bibelwissen. Die Bibel bietet noch viele Schätze zu entdecken.';
-        } else {
-            $assessment = 'Du stehst am Anfang deiner biblischen Entdeckungsreise. Jeder Anfang ist wertvoll!';
+            if ($count > 0) {
+                // Average score for this dimension
+                $avgScore = $rawScore / $count;
+                $dimensionResults[$id] = [
+                    'label' => $dimension['label'],
+                    'score' => round($avgScore, 2),
+                    'percentage' => round(($avgScore / 5) * 100, 1),
+                    'questions_answered' => $count
+                ];
+            } else {
+                $dimensionResults[$id] = [
+                    'label' => $dimension['label'],
+                    'score' => 0,
+                    'percentage' => 0,
+                    'questions_answered' => 0
+                ];
+            }
         }
+
+        // Calculate overall score using weighted average
+        $scoringRules = $questionnaire['scoring_rules'];
+        $overallScore = 0;
+        $totalWeight = 0;
+
+        foreach ($scoringRules['overall']['weights'] as $dimensionId => $weight) {
+            if (isset($dimensionResults[$dimensionId])) {
+                $overallScore += $dimensionResults[$dimensionId]['score'] * $weight;
+                $totalWeight += $weight;
+            }
+        }
+
+        if ($totalWeight > 0) {
+            $overallScore = $overallScore / $totalWeight;
+        }
+
+        $overallPercentage = round(($overallScore / 5) * 100, 1);
+
+        // Generate assessment based on overall score
+        $assessment = generateAssessment($overallScore, $dimensionResults);
 
         // Save results to disk if identifier is provided
         if ($identifier) {
             $resultData = [
                 'identifier' => $identifier,
+                'questionnaire_id' => $questionnaire['id'],
                 'timestamp' => date('Y-m-d H:i:s'),
-                'score' => $score,
-                'correctAnswers' => $correctAnswers,
-                'totalQuestions' => $totalQuestions,
+                'overall_score' => $overallScore,
+                'overall_percentage' => $overallPercentage,
+                'dimension_scores' => $dimensionResults,
                 'assessment' => $assessment,
+                'total_answered' => $totalAnswered,
+                'total_required' => $totalRequired,
                 'results' => $results,
                 'userAnswers' => $userAnswers
             ];
@@ -194,10 +373,12 @@ try {
 
         echo json_encode([
             'success' => true,
-            'score' => $score,
-            'correctAnswers' => $correctAnswers,
-            'totalQuestions' => $totalQuestions,
+            'overall_score' => $overallScore,
+            'overall_percentage' => $overallPercentage,
+            'dimension_scores' => $dimensionResults,
             'assessment' => $assessment,
+            'total_answered' => $totalAnswered,
+            'total_required' => $totalRequired,
             'results' => $results
         ]);
 

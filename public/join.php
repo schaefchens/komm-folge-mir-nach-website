@@ -80,17 +80,27 @@ if (!empty($email) || !empty($mobile)) {
     if (file_exists($questionnaireFile)) {
         $questionnaireData = json_decode(file_get_contents($questionnaireFile), true);
         if ($questionnaireData) {
-            $questionnaireResults = "Punktzahl: {$questionnaireData['score']}%\n";
-            $questionnaireResults .= "Richtige Antworten: {$questionnaireData['correctAnswers']}/{$questionnaireData['totalQuestions']}\n";
+            // New format with multi-dimensional scoring
+            $questionnaireResults = "Gesamtpunktzahl: {$questionnaireData['overall_percentage']}%\n";
+            $questionnaireResults .= "Beantwortete Fragen: {$questionnaireData['total_answered']}/{$questionnaireData['total_required']} (Pflicht)\n";
             $questionnaireResults .= "Bewertung: {$questionnaireData['assessment']}\n\n";
-            $questionnaireResults .= "Detailierte Ergebnisse:\n";
 
+            // Add dimension scores
+            $questionnaireResults .= "Einschätzung nach Bereichen:\n";
+            foreach ($questionnaireData['dimension_scores'] as $dimId => $dimScore) {
+                $questionnaireResults .= "- {$dimScore['label']}: {$dimScore['percentage']}%\n";
+            }
+            $questionnaireResults .= "\n";
+
+            $questionnaireResults .= "Detailierte Ergebnisse:\n";
             foreach ($questionnaireData['results'] as $index => $result) {
-                $status = $result['isCorrect'] ? '✓' : ($result['userAnswer'] === null ? '⏰' : '✗');
+                $status = $result['answered']
+                    ? (($result['score'] / $result['maxScore']) >= 0.6 ? '✓' : '○')
+                    : '⏰';
                 $questionShort = substr($result['question'], 0, 50) . (strlen($result['question']) > 50 ? '...' : '');
                 $questionnaireResults .= ($index + 1) . ". {$questionShort}\n";
-                $questionnaireResults .= "   Antwort: " . ($result['userAnswer'] ?: 'Zeit abgelaufen') . "\n";
-                $questionnaireResults .= "   Korrekt: {$result['correctAnswer']} {$status}\n\n";
+                $questionnaireResults .= "   Antwort: " . ($result['answered'] ? ($result['userAnswer'] ?: 'Übersprungen') : 'Zeit abgelaufen') . "\n";
+                $questionnaireResults .= "   Bewertung: {$result['score']}/{$result['maxScore']} {$status}\n\n";
             }
         }
     }

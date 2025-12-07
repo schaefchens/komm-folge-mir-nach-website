@@ -3,16 +3,46 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, ArrowLeft } from "lucide-react";
 
 // Timer constants (in milliseconds)
 const QUESTION_SHOW_TIME = 3000; // Time to show question before auto-revealing choices (3 seconds)
-const ANSWER_TIME = 7000; // Time to answer question once choices are revealed (7 seconds)
+const ANSWER_TIME = 10000; // Time to answer question once choices are revealed (10 seconds)
+
+interface Scale {
+  min: number;
+  max: number;
+  labels: Record<string, string>;
+}
+
+interface QuestionOption {
+  value: string;
+  label: string;
+}
 
 interface Question {
   id: string;
+  section_id: string;
+  dimension: string;
+  type: 'single_choice' | 'likert';
+  text: string;
+  required: boolean;
+  options?: QuestionOption[];
+  scale?: Scale;
+}
+
+interface Section {
+  id: string;
   title: string;
-  choices: string[];
+  description: string;
+  questions: Question[];
+}
+
+interface QuestionnaireData {
+  id: string;
+  title: string;
+  description: string;
+  dimensions: Array<{ id: string; label: string }>;
 }
 
 interface QuestionnaireProps {
@@ -22,8 +52,10 @@ interface QuestionnaireProps {
 }
 
 const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: QuestionnaireProps & { identifier: string }) => {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireData | null>(null);
+  const [sections, setSections] = useState<Section[]>([]);
   const [showIntro, setShowIntro] = useState(true);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showChoices, setShowChoices] = useState(false);
   const [timeLeft, setTimeLeft] = useState(ANSWER_TIME / 1000);
@@ -34,18 +66,20 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
   const [questionnaireAssessment, setQuestionnaireAssessment] = useState<string>('');
   const [questionnaireResults, setQuestionnaireResults] = useState<any[]>([]);
 
-  // Fetch questions from PHP API
+  // Fetch questionnaire from PHP API
   useEffect(() => {
     if (open) {
-      const fetchQuestions = async () => {
+      const fetchQuestionnaire = async () => {
         try {
-          const url = identifier ? `/questionaire.php?identifier=${encodeURIComponent(identifier)}` : '/questionaire.php';
+          const url = identifier ? `/questionaire.php?identifier=${encodeURIComponent(identifier)}&questionnaire=glaubensfragebogen_v1` : '/questionaire.php?questionnaire=glaubensfragebogen_v1';
           const response = await fetch(url);
           const data = await response.json();
 
-          if (data.success && data.questions) {
-            setQuestions(data.questions);
+          if (data.success && data.sections) {
+            setQuestionnaire(data.questionnaire);
+            setSections(data.sections);
             setShowIntro(true);
+            setCurrentSectionIndex(0);
             setCurrentQuestionIndex(0);
             setShowChoices(false);
             setTimeLeft(ANSWER_TIME / 1000);
@@ -56,34 +90,36 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
             setQuestionnaireAssessment('');
             setQuestionnaireResults([]);
           } else {
-            console.error('Failed to fetch questions:', data.error);
-            // Fallback to empty questions array
-            setQuestions([]);
+            console.error('Failed to fetch questionnaire:', data.error);
+            setSections([]);
           }
         } catch (error) {
-          console.error('Error fetching questions:', error);
-          setQuestions([]);
+          console.error('Error fetching questionnaire:', error);
+          setSections([]);
         }
       };
 
-      fetchQuestions();
+      fetchQuestionnaire();
     }
-  }, [open]);
+  }, [open, identifier]);
 
   // Auto-reveal choices after 3 seconds
   useEffect(() => {
-    if (!open || showChoices || isAnswered || showIntro) return;
+    if (!open || showChoices || isAnswered || showIntro || sections.length === 0) return;
+
+    const currentSection = sections[currentSectionIndex];
+    if (!currentSection || currentQuestionIndex >= currentSection.questions.length) return;
 
     const autoRevealTimer = setTimeout(() => {
       revealChoices();
     }, QUESTION_SHOW_TIME);
 
     return () => clearTimeout(autoRevealTimer);
-  }, [open, showChoices, isAnswered, showIntro, currentQuestionIndex]);
+  }, [open, showChoices, isAnswered, showIntro, currentSectionIndex, currentQuestionIndex, sections]);
 
   // Timer logic
   useEffect(() => {
-    if (!open || !showChoices || isAnswered) return;
+    if (!open || !showChoices || isAnswered || sections.length === 0) return;
 
     if (timeLeft <= 0) {
       handleTimeout();
@@ -95,24 +131,28 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [timeLeft, open, showChoices, isAnswered]);
+  }, [timeLeft, open, showChoices, isAnswered, sections]);
 
   const handleTimeout = () => {
-    const currentQuestion = questions[currentQuestionIndex];
+    if (sections.length === 0) return;
+
+    const currentSection = sections[currentSectionIndex];
+    const currentQuestion = currentSection.questions[currentQuestionIndex];
     const updatedAnswers = { ...answers, [currentQuestion.id]: null };
     setAnswers(updatedAnswers);
     setIsAnswered(true);
-    
+
     setTimeout(() => {
       moveToNextQuestion(updatedAnswers);
     }, 1500);
   };
 
-  const handleAnswer = (choice: string) => {
-    if (isAnswered) return;
-    
-    const currentQuestion = questions[currentQuestionIndex];
-    const updatedAnswers = { ...answers, [currentQuestion.id]: choice };
+  const handleAnswer = (answer: string) => {
+    if (isAnswered || sections.length === 0) return;
+
+    const currentSection = sections[currentSectionIndex];
+    const currentQuestion = currentSection.questions[currentQuestionIndex];
+    const updatedAnswers = { ...answers, [currentQuestion.id]: answer };
     setAnswers(updatedAnswers);
     setIsAnswered(true);
 
@@ -122,33 +162,45 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
   };
 
   const moveToNextQuestion = async (latestAnswers?: Record<string, string | null>) => {
+    if (sections.length === 0) return;
+
     // Use latest answers if provided (to include the current answer due to React's async state)
     const finalAnswers = latestAnswers || answers;
-    
-    if (currentQuestionIndex < questions.length - 1) {
+
+    const currentSection = sections[currentSectionIndex];
+
+    if (currentQuestionIndex < currentSection.questions.length - 1) {
+      // Next question in current section
       setCurrentQuestionIndex(prev => prev + 1);
       setShowChoices(false);
       setTimeLeft(ANSWER_TIME / 1000);
       setIsAnswered(false);
+    } else if (currentSectionIndex < sections.length - 1) {
+      // Next section
+      setCurrentSectionIndex(prev => prev + 1);
+      setCurrentQuestionIndex(0);
+      setShowChoices(false);
+      setTimeLeft(ANSWER_TIME / 1000);
+      setIsAnswered(false);
     } else {
-      // Submit answers to get score and show results
+      // All questions completed - submit answers
       try {
         const response = await fetch('/questionaire.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ answers: finalAnswers, identifier }),
+          body: JSON.stringify({ answers: finalAnswers, identifier, questionnaire: 'glaubensfragebogen_v1' }),
         });
 
         const data = await response.json();
 
         if (data.success) {
           // Store results but don't show dialog yet - let parent component decide
-          setQuestionnaireScore(data.score);
+          setQuestionnaireScore(data.overall_percentage);
           setQuestionnaireAssessment(data.assessment);
           setQuestionnaireResults(data.results);
-          onComplete(finalAnswers, data.score, data.assessment, data.results);
+          onComplete(finalAnswers, data.overall_percentage, data.assessment, data.results);
         } else {
           console.error('Failed to submit answers:', data.error);
           onComplete(finalAnswers); // Fallback without score
@@ -165,10 +217,43 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
     setTimeLeft(ANSWER_TIME / 1000);
   };
 
-  if (questions.length === 0) return null;
+  const goToPreviousSection = () => {
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex(prev => prev - 1);
+      setCurrentQuestionIndex(0);
+      setShowChoices(false);
+      setTimeLeft(ANSWER_TIME / 1000);
+      setIsAnswered(false);
+    }
+  };
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const goToNextSection = () => {
+    if (currentSectionIndex < sections.length - 1) {
+      setCurrentSectionIndex(prev => prev + 1);
+      setCurrentQuestionIndex(0);
+      setShowChoices(false);
+      setTimeLeft(ANSWER_TIME / 1000);
+      setIsAnswered(false);
+    }
+  };
+
+  if (sections.length === 0) return null;
+
+  const currentSection = sections[currentSectionIndex];
+  const currentQuestion = currentSection.questions[currentQuestionIndex];
+
+  // Calculate overall progress
+  let totalQuestions = 0;
+  let completedQuestions = 0;
+  sections.forEach((section, sectionIdx) => {
+    totalQuestions += section.questions.length;
+    if (sectionIdx < currentSectionIndex) {
+      completedQuestions += section.questions.length;
+    } else if (sectionIdx === currentSectionIndex) {
+      completedQuestions += currentQuestionIndex;
+    }
+  });
+  const progress = (completedQuestions / totalQuestions) * 100;
   const timeProgress = (timeLeft / (ANSWER_TIME / 1000)) * 100;
 
   return (
@@ -179,13 +264,12 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl">
-                Glaubenseinschätzung
+                {questionnaire?.title || 'Glaubenseinschätzung'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 py-6">
               <p className="text-lg text-center text-muted-foreground">
-                Um dich besser einschätzen zu können, stellen wir dir ein paar kurze Fragen 
-                zu deinem Glauben und Bibelwissen.
+                {questionnaire?.description || 'Um dich besser einschätzen zu können, stellen wir dir Fragen zu verschiedenen Bereichen deines christlichen Glaubens.'}
               </p>
               <p className="text-center text-muted-foreground">
                 Du hast pro Frage {ANSWER_TIME / 1000} Sekunden Zeit zum Antworten.
@@ -206,10 +290,16 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl">
-                Frage {currentQuestionIndex + 1} von {questions.length}
+              <DialogTitle className="text-xl">
+                {currentSection.title} - Frage {currentQuestionIndex + 1} von {currentSection.questions.length}
               </DialogTitle>
-              <Progress value={progress} className="h-2" />
+              <div className="space-y-2">
+                <Progress value={progress} className="h-2" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Abschnitt {currentSectionIndex + 1} von {sections.length}</span>
+                  <span>{Math.round(progress)}% abgeschlossen</span>
+                </div>
+              </div>
             </DialogHeader>
 
             <div className="space-y-8 py-6">
@@ -223,9 +313,12 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                 >
               {/* Question Title */}
               <div className="text-center">
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                  {currentQuestion.title}
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+                  {currentQuestion.text}
                 </h3>
+                {!currentQuestion.required && (
+                  <p className="text-sm text-muted-foreground">(Diese Frage ist optional)</p>
+                )}
               </div>
 
               {!showChoices ? (
@@ -255,8 +348,8 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                       </span>
                       <span className="font-semibold">{timeLeft}s</span>
                     </div>
-                    <Progress 
-                      value={timeProgress} 
+                    <Progress
+                      value={timeProgress}
                       className="h-2"
                       style={{
                         background: timeLeft <= 2 ? 'hsl(var(--destructive) / 0.2)' : undefined
@@ -270,39 +363,86 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-3"
                   >
-                    {currentQuestion.choices.map((choice, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => handleAnswer(choice)}
-                        disabled={isAnswered}
-                        className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${
-                          isAnswered && answers[currentQuestion.id] === choice
-                            ? 'border-primary bg-primary/10 font-semibold'
-                            : 'border-border bg-background hover:border-primary/50 hover:bg-accent'
-                        } disabled:opacity-60`}
-                      >
-                        {choice}
-                      </motion.button>
-                    ))}
-                    
-                    {/* None option */}
-                    <motion.button
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: currentQuestion.choices.length * 0.1 }}
-                      onClick={() => handleAnswer("Keine Antwort passt")}
-                      disabled={isAnswered}
-                      className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${
-                        isAnswered && answers[currentQuestion.id] === "Keine Antwort passt"
-                          ? 'border-primary bg-primary/10 font-semibold'
-                          : 'border-border bg-muted/50 hover:border-primary/50 hover:bg-accent'
-                      } disabled:opacity-60`}
-                    >
-                      Keine Antwort passt
-                    </motion.button>
+                    {currentQuestion.type === 'single_choice' && currentQuestion.options ? (
+                      <>
+                        {currentQuestion.options.map((option, index) => (
+                          <motion.button
+                            key={option.value}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            onClick={() => handleAnswer(option.value)}
+                            disabled={isAnswered}
+                            className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${
+                              isAnswered && answers[currentQuestion.id] === option.value
+                                ? 'border-primary bg-primary/10 font-semibold'
+                                : 'border-border bg-background hover:border-primary/50 hover:bg-accent'
+                            } disabled:opacity-60`}
+                          >
+                            {option.label}
+                          </motion.button>
+                        ))}
+                        {!currentQuestion.required && (
+                          <motion.button
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: currentQuestion.options.length * 0.1 }}
+                            onClick={() => handleAnswer("")}
+                            disabled={isAnswered}
+                            className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 ${
+                              isAnswered && answers[currentQuestion.id] === ""
+                                ? 'border-primary bg-primary/10 font-semibold'
+                                : 'border-border bg-muted/50 hover:border-primary/50 hover:bg-accent'
+                            } disabled:opacity-60`}
+                          >
+                            Überspringen
+                          </motion.button>
+                        )}
+                      </>
+                    ) : currentQuestion.type === 'likert' && currentQuestion.scale ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-5 gap-2">
+                          {Array.from({ length: currentQuestion.scale.max - currentQuestion.scale.min + 1 }, (_, i) => {
+                            const value = currentQuestion.scale!.min + i;
+                            const label = currentQuestion.scale!.labels[value.toString()] || value.toString();
+                            return (
+                              <motion.button
+                                key={value}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                onClick={() => handleAnswer(value.toString())}
+                                disabled={isAnswered}
+                                className={`p-3 text-center rounded-lg border-2 transition-all duration-200 text-sm ${
+                                  isAnswered && answers[currentQuestion.id] === value.toString()
+                                    ? 'border-primary bg-primary/10 font-semibold'
+                                    : 'border-border bg-background hover:border-primary/50 hover:bg-accent'
+                                } disabled:opacity-60`}
+                              >
+                                <div className="font-semibold">{value}</div>
+                                <div className="text-xs text-muted-foreground mt-1">{label}</div>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                        {!currentQuestion.required && (
+                          <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            onClick={() => handleAnswer("")}
+                            disabled={isAnswered}
+                            className={`w-full p-3 text-center rounded-lg border-2 transition-all duration-200 ${
+                              isAnswered && answers[currentQuestion.id] === ""
+                                ? 'border-primary bg-primary/10 font-semibold'
+                                : 'border-border bg-muted/50 hover:border-primary/50 hover:bg-accent'
+                            } disabled:opacity-60`}
+                          >
+                            Überspringen
+                          </motion.button>
+                        )}
+                      </div>
+                    ) : null}
                   </motion.div>
 
                   {/* Timeout State */}
@@ -317,6 +457,28 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                       </p>
                     </motion.div>
                   )}
+
+                  {/* Section Navigation */}
+                  <div className="flex justify-between pt-4 border-t border-border/50">
+                    <Button
+                      variant="outline"
+                      onClick={goToPreviousSection}
+                      disabled={currentSectionIndex === 0}
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Vorheriger Abschnitt
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={goToNextSection}
+                      disabled={currentSectionIndex >= sections.length - 1}
+                      className="flex items-center gap-2"
+                    >
+                      Nächster Abschnitt
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </>
               )}
                 </motion.div>
