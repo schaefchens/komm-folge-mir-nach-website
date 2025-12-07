@@ -29,6 +29,9 @@ const SignupForm = () => {
   const [showEmailOption, setShowEmailOption] = useState(false);
   const [showEmailWarningModal, setShowEmailWarningModal] = useState(false);
   const [showFullPrivacy, setShowFullPrivacy] = useState(false);
+  const [questionnaireResults, setQuestionnaireResults] = useState<any[] | null>(null);
+  const [questionnaireScore, setQuestionnaireScore] = useState<number | null>(null);
+  const [questionnaireAssessment, setQuestionnaireAssessment] = useState<string | null>(null);
   const {
     toast
   } = useToast();
@@ -38,7 +41,19 @@ const SignupForm = () => {
     if (!contact.trim()) return;
     setShowQuestionnaire(true);
   };
-  const handleQuestionnaireComplete = async (answers: Record<string, string | null>) => {
+  const handleQuestionnaireComplete = async (
+    answers: Record<string, string | null>,
+    score?: number,
+    assessment?: string,
+    results?: any[]
+  ) => {
+    // Store questionnaire results for later use
+    setQuestionnaireResults(results);
+    setQuestionnaireScore(score);
+    setQuestionnaireAssessment(assessment);
+  };
+
+  const handleProceedToSignup = async (resultsSummary: string) => {
     setShowQuestionnaire(false);
     setIsSubmitting(true);
     try {
@@ -51,6 +66,9 @@ const SignupForm = () => {
       if (inviteCode.trim()) {
         url += `&code=${encodeURIComponent(inviteCode)}`;
       }
+      // Add questionnaire results
+      url += `&questionnaire_results=${resultsSummary}`;
+
       const response = await fetch(url, {
         method: "GET"
       });
@@ -64,6 +82,10 @@ const SignupForm = () => {
         setContact("");
         setMessage("");
         setInviteCode("");
+        // Reset questionnaire state
+        setQuestionnaireResults(null);
+        setQuestionnaireScore(null);
+        setQuestionnaireAssessment(null);
       } else {
         toast({
           title: "Fehler",
@@ -353,7 +375,12 @@ const SignupForm = () => {
         </motion.div>
       </div>
 
-      <Questionnaire open={showQuestionnaire} onComplete={handleQuestionnaireComplete} onOpenChange={setShowQuestionnaire} />
+      <Questionnaire
+        open={showQuestionnaire}
+        onComplete={handleQuestionnaireComplete}
+        onOpenChange={setShowQuestionnaire}
+        onProceedToSignup={handleProceedToSignup}
+      />
       
       {/* Email Warning Modal */}
       <Dialog open={showEmailWarningModal} onOpenChange={setShowEmailWarningModal}>

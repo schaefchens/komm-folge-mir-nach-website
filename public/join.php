@@ -66,9 +66,10 @@ $service = strtolower($_GET['to'] ?? '');
 $mobile  = trim($_GET['mobile'] ?? '');
 $email   = trim($_GET['email'] ?? '');
 
-// Neue Parameter: message und code
+// Neue Parameter: message, code und questionnaire_results
 $userMessage = isset($_GET['message']) ? trim($_GET['message']) : '';
 $userCode    = isset($_GET['code']) ? trim($_GET['code']) : '';
+$questionnaireResults = isset($_GET['questionnaire_results']) ? $_GET['questionnaire_results'] : null;
 
 if (!in_array($service, ['sms', 'whatsapp', 'email'], true)) {
     echo json_encode(['success' => false, 'message' => 'Parameter "to" muss "sms", "whatsapp" oder "email" sein']);
@@ -169,6 +170,12 @@ if (!empty($email)) {
     $userIdent = "(keine Kontaktdaten)";
 }
 $adminText = "Ein Interessent mit $userIdent und Code ($userCode) will Komm, Folge Mir Nach! beitreten. Eine Einladung wurde versendet. Er schrieb folgende Nachricht:\n\n\"$userMessage\"";
+
+// Add questionnaire results to admin email if available
+if ($questionnaireResults) {
+    $adminText .= "\n\n=== GLAUBENSEINSCHÄTZUNG ===\n" . $questionnaireResults;
+}
+
 sendInvitationEmailNative($adminEmail, $adminText, $SMTP_CONFIG);
 
 exit;
