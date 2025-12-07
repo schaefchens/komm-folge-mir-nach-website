@@ -1,0 +1,155 @@
+{
+  "id": "simple_beliefs_v1",
+  "title": "Basis Glaubenstest",
+  "description": "Einfacher Test der grundlegenden christlichen Überzeugungen.",
+  "language": "de",
+  "version": "1.0",
+  "author": "Gemeinschaft Komm, Folge Mir Nach!",
+  "date_created": "2025-12-07",
+  "target_group": "Alle Interessierten",
+  "dimensions": [
+    {
+      "id": "basic_beliefs",
+      "label": "Grundlegende Überzeugungen",
+      "feedback_levels": {
+        "4+": "Sehr gute Grundkenntnisse!",
+        "3+": "Solide Grundlagen vorhanden.",
+        "2+": "Grundlegende Kenntnisse vorhanden.",
+        "default": "Raum für weitere Entdeckung."
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec_basics",
+      "title": "Grundlagen des christlichen Glaubens",
+      "description": "Basisfragen zu den fundamentalen christlichen Überzeugungen."
+    }
+  ],
+  "scales": {
+    "likert_1_5": {
+      "min": 1,
+      "max": 5,
+      "labels": {
+        "1": "stimme überhaupt nicht zu",
+        "2": "stimme eher nicht zu",
+        "3": "teils/teils",
+        "4": "stimme eher zu",
+        "5": "stimme voll zu"
+      }
+    }
+  },
+  "scoring_rules": {
+    "per_dimension": {
+      "basic_beliefs": { "method": "average", "max_score": 5 }
+    },
+    "overall": {
+      "method": "weighted_average",
+      "weights": {
+        "basic_beliefs": 1.0
+      }
+    }
+  },
+  "questions": [
+    {
+      "id": "q_god_1",
+      "section_id": "sec_basics",
+      "dimension": "basic_beliefs",
+      "type": "single_choice",
+      "text": "Wer ist Gott nach der Bibel?",
+      "required": true,
+      "options": [
+        { "value": "creator_only", "label": "Nur der Schöpfer der Welt" },
+        { "value": "creator_loving", "label": "Der Schöpfer und liebende Vater" },
+        { "value": "distant", "label": "Ein ferner, unpersönlicher Gott" },
+        { "value": "judge_only", "label": "Nur ein Richter und Gesetzgeber" }
+      ],
+      "scoring": {
+        "creator_loving": 5,
+        "creator_only": 3,
+        "judge_only": 2,
+        "distant": 1
+      }
+    },
+    {
+      "id": "q_jesus_1",
+      "section_id": "sec_basics",
+      "dimension": "basic_beliefs",
+      "type": "single_choice",
+      "text": "Warum ist Jesus in die Welt gekommen?",
+      "required": true,
+      "options": [
+        { "value": "teach_only", "label": "Nur um zu lehren und ein Vorbild zu sein" },
+        { "value": "save_sins", "label": "Um uns von unseren Sünden zu erretten" },
+        { "value": "establish_kingdom", "label": "Um ein irdisches Königreich zu errichten" },
+        { "value": "show_power", "label": "Um seine Macht zu demonstrieren" }
+      ],
+      "scoring": {
+        "save_sins": 5,
+        "teach_only": 3,
+        "establish_kingdom": 2,
+        "show_power": 1
+      }
+    },
+    {
+      "id": "q_sin_1",
+      "section_id": "sec_basics",
+      "dimension": "basic_beliefs",
+      "type": "single_choice",
+      "text": "Was ist Sünde?",
+      "required": true,
+      "options": [
+        { "value": "breaking_rules", "label": "Regeln brechen und Fehler machen" },
+        { "value": "hurting_others", "label": "Andere verletzen oder schädigen" },
+        { "value": "against_god", "label": "Sich gegen Gott und seinen Willen stellen" },
+        { "value": "natural", "label": "Etwas Natürliches und Unvermeidliches" }
+      ],
+      "scoring": {
+        "against_god": 5,
+        "breaking_rules": 3,
+        "hurting_others": 2,
+        "natural": 1
+      }
+    },
+    {
+      "id": "q_salvation_1",
+      "section_id": "sec_basics",
+      "dimension": "basic_beliefs",
+      "type": "single_choice",
+      "text": "Wie wird man nach christlichem Verständnis gerettet?",
+      "required": true,
+      "options": [
+        { "value": "good_works", "label": "Durch gute Taten und ein moralisches Leben" },
+        { "value": "church_membership", "label": "Durch Mitgliedschaft in einer Kirche" },
+        { "value": "faith_jesus", "label": "Durch Glauben an Jesus und seine Erlösung" },
+        { "value": "special_knowledge", "label": "Durch besonderes Wissen und Rituale" }
+      ],
+      "scoring": {
+        "faith_jesus": 5,
+        "good_works": 3,
+        "church_membership": 2,
+        "special_knowledge": 1
+      }
+    },
+    {
+      "id": "q_following_1",
+      "section_id": "sec_basics",
+      "dimension": "basic_beliefs",
+      "type": "single_choice",
+      "text": "Was bedeutet es, Jesus nachzufolgen?",
+      "required": true,
+      "options": [
+        { "value": "church_attendance", "label": "Regelmäßig in die Kirche gehen" },
+        { "value": "moral_life", "label": "Ein moralisches Leben führen" },
+        { "value": "learn_teachings", "label": "Seine Lehren lernen und weitergeben" },
+        { "value": "personal_relationship", "label": "Eine persönliche Beziehung zu ihm haben und ihm gehorchen" }
+      ],
+      "scoring": {
+        "personal_relationship": 5,
+        "learn_teachings": 4,
+        "moral_life": 3,
+        "church_attendance": 2
+      }
+    }
+  ]
+}
