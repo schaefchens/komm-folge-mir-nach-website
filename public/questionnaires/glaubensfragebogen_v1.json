@@ -8,12 +8,66 @@
   "date_created": "2025-12-07",
   "target_group": "Erwachsene Christen und Interessierte",
   "dimensions": [
-    { "id": "knowledge", "label": "Biblisches Wissen" },
-    { "id": "belief", "label": "Theologische Überzeugungen" },
-    { "id": "trust", "label": "Vertrauen / Beziehung zu Gott" },
-    { "id": "practice", "label": "Gelebter Glaube" },
-    { "id": "maturity", "label": "Geistliche Reife" },
-    { "id": "biblical_alignment", "label": "Biblische Orientierung" }
+    {
+      "id": "knowledge",
+      "label": "Biblisches Wissen",
+      "feedback_levels": {
+        "4+": "Exzellentes Bibelwissen!",
+        "3+": "Gutes Bibelverständnis.",
+        "2+": "Grundlegendes Bibelwissen vorhanden.",
+        "default": "Raum für biblisches Lernen."
+      }
+    },
+    {
+      "id": "belief",
+      "label": "Theologische Überzeugungen",
+      "feedback_levels": {
+        "4+": "Starke theologische Überzeugungen!",
+        "3+": "Solide Glaubensgrundlagen.",
+        "2+": "Entwickelnde Glaubensüberzeugungen.",
+        "default": "Bereich für Glaubensvertiefung."
+      }
+    },
+    {
+      "id": "trust",
+      "label": "Vertrauen / Beziehung zu Gott",
+      "feedback_levels": {
+        "4+": "Tiefes Gottvertrauen!",
+        "3+": "Gutes Vertrauensverhältnis zu Gott.",
+        "2+": "Wachsendes Gottvertrauen.",
+        "default": "Raum für Vertrauensentwicklung."
+      }
+    },
+    {
+      "id": "practice",
+      "label": "Gelebter Glaube",
+      "feedback_levels": {
+        "4+": "Sehr aktive Glaubenspraxis!",
+        "3+": "Regelmäßige Glaubenspraxis.",
+        "2+": "Entwickelnde Glaubenspraxis.",
+        "default": "Bereich für praktische Umsetzung."
+      }
+    },
+    {
+      "id": "maturity",
+      "label": "Geistliche Reife",
+      "feedback_levels": {
+        "4+": "Hohe geistliche Reife!",
+        "3+": "Gute Charakterentwicklung.",
+        "2+": "Wachsende Reife.",
+        "default": "Raum für Charakterwachstum."
+      }
+    },
+    {
+      "id": "biblical_alignment",
+      "label": "Biblische Orientierung",
+      "feedback_levels": {
+        "4+": "Starke biblische Orientierung!",
+        "3+": "Gute Entscheidungsfindung nach biblischen Maßstäben.",
+        "2+": "Entwickelnde biblische Orientierung.",
+        "default": "Bereich für biblische Entscheidungsfindung."
+      }
+    }
   ],
   "sections": [
     {

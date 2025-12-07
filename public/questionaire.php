@@ -67,7 +67,7 @@ if (!$questionnaire || !validateQuestionnaire($questionnaire)) {
 }
 
 // Generate assessment text based on scores
-function generateAssessment($overallScore, $dimensionResults) {
+function generateAssessment($overallScore, $dimensionResults, $questionnaire) {
     $score = round($overallScore, 1);
 
     // Overall assessment based on score
@@ -90,53 +90,36 @@ function generateAssessment($overallScore, $dimensionResults) {
 
     // Dimension-specific feedback
     $dimensionFeedback = [];
+    $dimensionsMap = [];
+
+    // Create lookup map for dimensions
+    foreach ($questionnaire['dimensions'] as $dimension) {
+        $dimensionsMap[$dimension['id']] = $dimension;
+    }
 
     foreach ($dimensionResults as $id => $result) {
         $dimScore = $result['score'];
         $feedback = '';
 
-        switch ($id) {
-            case 'knowledge':
-                if ($dimScore >= 4) $feedback = 'Exzellentes Bibelwissen!';
-                elseif ($dimScore >= 3) $feedback = 'Gutes Bibelverständnis.';
-                elseif ($dimScore >= 2) $feedback = 'Grundlegendes Bibelwissen vorhanden.';
-                else $feedback = 'Raum für biblisches Lernen.';
-                break;
+        // Get feedback from questionnaire definition
+        if (isset($dimensionsMap[$id]) && isset($dimensionsMap[$id]['feedback_levels'])) {
+            $feedbackLevels = $dimensionsMap[$id]['feedback_levels'];
 
-            case 'belief':
-                if ($dimScore >= 4) $feedback = 'Starke theologische Überzeugungen!';
-                elseif ($dimScore >= 3) $feedback = 'Solide Glaubensgrundlagen.';
-                elseif ($dimScore >= 2) $feedback = 'Entwickelnde Glaubensüberzeugungen.';
-                else $feedback = 'Bereich für Glaubensvertiefung.';
-                break;
-
-            case 'trust':
-                if ($dimScore >= 4) $feedback = 'Tiefes Gottvertrauen!';
-                elseif ($dimScore >= 3) $feedback = 'Gutes Vertrauensverhältnis zu Gott.';
-                elseif ($dimScore >= 2) $feedback = 'Wachsendes Gottvertrauen.';
-                else $feedback = 'Raum für Vertrauensentwicklung.';
-                break;
-
-            case 'practice':
-                if ($dimScore >= 4) $feedback = 'Sehr aktive Glaubenspraxis!';
-                elseif ($dimScore >= 3) $feedback = 'Regelmäßige Glaubenspraxis.';
-                elseif ($dimScore >= 2) $feedback = 'Entwickelnde Glaubenspraxis.';
-                else $feedback = 'Bereich für praktische Umsetzung.';
-                break;
-
-            case 'maturity':
-                if ($dimScore >= 4) $feedback = 'Hohe geistliche Reife!';
-                elseif ($dimScore >= 3) $feedback = 'Gute Charakterentwicklung.';
-                elseif ($dimScore >= 2) $feedback = 'Wachsende Reife.';
-                else $feedback = 'Raum für Charakterwachstum.';
-                break;
-
-            case 'biblical_alignment':
-                if ($dimScore >= 4) $feedback = 'Starke biblische Orientierung!';
-                elseif ($dimScore >= 3) $feedback = 'Gute Entscheidungsfindung nach biblischen Maßstäben.';
-                elseif ($dimScore >= 2) $feedback = 'Entwickelnde biblische Orientierung.';
-                else $feedback = 'Bereich für biblische Entscheidungsfindung.';
-                break;
+            // Check feedback levels in order (highest first)
+            if ($dimScore >= 4 && isset($feedbackLevels['4+'])) {
+                $feedback = $feedbackLevels['4+'];
+            } elseif ($dimScore >= 3 && isset($feedbackLevels['3+'])) {
+                $feedback = $feedbackLevels['3+'];
+            } elseif ($dimScore >= 2 && isset($feedbackLevels['2+'])) {
+                $feedback = $feedbackLevels['2+'];
+            } elseif (isset($feedbackLevels['default'])) {
+                $feedback = $feedbackLevels['default'];
+            } else {
+                $feedback = 'Entwicklungspotenzial vorhanden.';
+            }
+        } else {
+            // Fallback if no feedback levels defined
+            $feedback = 'Entwicklungspotenzial vorhanden.';
         }
 
         $dimensionFeedback[] = $result['label'] . ': ' . $feedback;
@@ -349,7 +332,7 @@ try {
         $overallPercentage = round(($overallScore / 5) * 100, 1);
 
         // Generate assessment based on overall score
-        $assessment = generateAssessment($overallScore, $dimensionResults);
+        $assessment = generateAssessment($overallScore, $dimensionResults, $questionnaire);
 
         // Save results to disk if identifier is provided
         if ($identifier) {
