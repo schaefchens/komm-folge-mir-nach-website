@@ -69,7 +69,7 @@ const Hero = () => {
             
             <p className="text-xl md:text-2xl text-white font-light tracking-wide" style={{
             filter: 'drop-shadow(0 2px 15px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 30px rgba(0, 0, 0, 0.5))'
-          }}>– Jesaja 43,1)</p>
+          }}>– Jesaja 43,1</p>
           </motion.div>
 
           <motion.div initial={{
