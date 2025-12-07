@@ -20,10 +20,9 @@ interface QuestionnaireProps {
   open: boolean;
   onComplete: (answers: Record<string, string | null>, score?: number, assessment?: string, results?: any[]) => void;
   onOpenChange: (open: boolean) => void;
-  onProceedToSignup?: (resultsSummary: string) => void;
 }
 
-const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup, identifier }: QuestionnaireProps & { identifier: string }) => {
+const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: QuestionnaireProps & { identifier: string }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showIntro, setShowIntro] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -141,10 +140,10 @@ const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup, iden
         const data = await response.json();
 
         if (data.success) {
+          // Store results but don't show dialog yet - let parent component decide
           setQuestionnaireScore(data.score);
           setQuestionnaireAssessment(data.assessment);
           setQuestionnaireResults(data.results);
-          setShowResults(true);
           onComplete(answers, data.score, data.assessment, data.results);
         } else {
           console.error('Failed to submit answers:', data.error);
@@ -336,24 +335,6 @@ const Questionnaire = ({ open, onComplete, onOpenChange, onProceedToSignup, iden
       score={questionnaireScore}
       assessment={questionnaireAssessment}
       results={questionnaireResults}
-      onProceedToSignup={() => {
-        if (onProceedToSignup) {
-          // Generate formatted results summary for URL parameter
-          let summary = `Punktzahl: ${questionnaireScore}%\n`;
-          summary += `Richtige Antworten: ${questionnaireResults.filter((r: any) => r.isCorrect).length}/${questionnaireResults.length}\n`;
-          summary += `Bewertung: ${questionnaireAssessment}\n\n`;
-          summary += `Detailierte Ergebnisse:\n`;
-
-          questionnaireResults.forEach((result: any, index: number) => {
-            const status = result.isCorrect ? '✓' : (result.userAnswer === null ? '⏰' : '✗');
-            summary += `${index + 1}. ${result.question.substring(0, 50)}...\n`;
-            summary += `   Antwort: ${result.userAnswer || 'Zeit abgelaufen'}\n`;
-            summary += `   Korrekt: ${result.correctAnswer} ${status}\n\n`;
-          });
-
-          onProceedToSignup(encodeURIComponent(summary));
-        }
-      }}
     />
     </>
   );

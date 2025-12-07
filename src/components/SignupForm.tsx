@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, ArrowRight, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Questionnaire from "@/components/Questionnaire";
+import QuestionnaireResults from "@/components/QuestionnaireResults";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ const SignupForm = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [showQuestionnaireResults, setShowQuestionnaireResults] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [acceptedIntent, setAcceptedIntent] = useState(false);
   const [showEmailOption, setShowEmailOption] = useState(false);
@@ -63,14 +65,12 @@ const SignupForm = () => {
     assessment?: string,
     results?: any[]
   ) => {
-    // Store questionnaire results for later use
+    // Store questionnaire results
     setQuestionnaireResults(results);
     setQuestionnaireScore(score);
     setQuestionnaireAssessment(assessment);
-  };
 
-  const handleProceedToSignup = async (resultsSummary: string) => {
-    setShowQuestionnaire(false);
+    // Send SMS/email immediately after questionnaire completion
     setIsSubmitting(true);
     try {
       // Build query parameters
@@ -82,8 +82,6 @@ const SignupForm = () => {
       if (inviteCode.trim()) {
         url += `&code=${encodeURIComponent(inviteCode)}`;
       }
-      // Add questionnaire results
-      url += `&questionnaire_results=${resultsSummary}`;
 
       const response = await fetch(url, {
         method: "GET"
@@ -91,30 +89,37 @@ const SignupForm = () => {
       const data = await response.json();
       const serviceName = service === "sms" ? "SMS" : "E-Mail";
       if (data.success) {
+        // Success - close questionnaire and show results
+        setShowQuestionnaire(false);
         toast({
           title: "Erfolg!",
           description: data.message || `Wir haben dir eine ${serviceName}-Nachricht an ${contact} gesendet mit einem Link zur Community.`
         });
-        setContact("");
-        setMessage("");
-        setInviteCode("");
-        // Reset questionnaire state
-        setQuestionnaireResults(null);
-        setQuestionnaireScore(null);
-        setQuestionnaireAssessment(null);
+        // Show questionnaire results after successful signup
+        setTimeout(() => {
+          setShowQuestionnaireResults(true);
+        }, 300);
       } else {
+        // Error - close questionnaire and show form again
+        setShowQuestionnaire(false);
         toast({
           title: "Fehler",
-          description: data.message || `Es gab ein Problem beim Versenden der ${serviceName}-Nachricht.`,
+          description: data.message || `Es gab ein Problem beim Versenden der ${serviceName}-Nachricht. Bitte versuche es erneut.`,
           variant: "destructive"
         });
+        // Reset submitting state so user can try again
+        setIsSubmitting(false);
       }
     } catch (error) {
+      // Error - close questionnaire and show form again
+      setShowQuestionnaire(false);
       toast({
         title: "Fehler",
-        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "E-Mail"}.`,
+        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "E-Mail"}. Bitte versuche es erneut.`,
         variant: "destructive"
       });
+      // Reset submitting state so user can try again
+      setIsSubmitting(false);
     }
     setIsSubmitting(false);
   };
@@ -395,7 +400,6 @@ const SignupForm = () => {
         open={showQuestionnaire}
         onComplete={handleQuestionnaireComplete}
         onOpenChange={setShowQuestionnaire}
-        onProceedToSignup={handleProceedToSignup}
         identifier={questionnaireIdentifier}
       />
       
@@ -433,6 +437,29 @@ const SignupForm = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Questionnaire Results Dialog - shown after successful signup */}
+      {showQuestionnaireResults && questionnaireResults && (
+        <QuestionnaireResults
+          open={showQuestionnaireResults}
+          onOpenChange={(open) => {
+            setShowQuestionnaireResults(open);
+            if (!open) {
+              // Reset form when results dialog closes
+              setContact("");
+              setMessage("");
+              setInviteCode("");
+              setQuestionnaireResults(null);
+              setQuestionnaireScore(null);
+              setQuestionnaireAssessment(null);
+              setQuestionnaireIdentifier('');
+            }
+          }}
+          score={questionnaireScore || 0}
+          assessment={questionnaireAssessment || ''}
+          results={questionnaireResults}
+        />
+      )}
     </section>;
-};
+  };
 export default SignupForm;

@@ -20,7 +20,6 @@ interface QuestionnaireResultsProps {
   score: number;
   assessment: string;
   results: QuestionResult[];
-  onProceedToSignup?: () => void;
 }
 
 const QuestionnaireResults = ({
@@ -28,37 +27,13 @@ const QuestionnaireResults = ({
   onOpenChange,
   score,
   assessment,
-  results,
-  onProceedToSignup
+  results
 }: QuestionnaireResultsProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const correctAnswers = results.filter(r => r.isCorrect).length;
   const totalQuestions = results.length;
 
-  // Generate formatted results for URL parameter
-  const generateResultsSummary = () => {
-    let summary = `Punktzahl: ${score}%\n`;
-    summary += `Richtige Antworten: ${correctAnswers}/${totalQuestions}\n`;
-    summary += `Bewertung: ${assessment}\n\n`;
-    summary += `Detailierte Ergebnisse:\n`;
-
-    results.forEach((result, index) => {
-      const status = result.isCorrect ? '✓' : (result.userAnswer === null ? '⏰' : '✗');
-      summary += `${index + 1}. ${result.question.substring(0, 50)}...\n`;
-      summary += `   Antwort: ${result.userAnswer || 'Zeit abgelaufen'}\n`;
-      summary += `   Korrekt: ${result.correctAnswer} ${status}\n\n`;
-    });
-
-    return encodeURIComponent(summary);
-  };
-
-  const handleProceedToSignup = () => {
-    if (onProceedToSignup) {
-      onProceedToSignup();
-    }
-    onOpenChange(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -185,17 +160,17 @@ const QuestionnaireResults = ({
             )}
           </AnimatePresence>
 
-          {/* Proceed Button */}
+          {/* Close Button */}
           <div className="pt-4 border-t">
             <Button
-              onClick={handleProceedToSignup}
+              onClick={() => onOpenChange(false)}
               size="lg"
               className="w-full bg-gradient-warm text-white hover:shadow-hover transition-all duration-300"
             >
               Schließen
             </Button>
             <p className="text-center text-sm text-muted-foreground mt-2">
-              Deine Ergebnisse werden automatisch in deine Anmeldung übernommen
+              Deine Ergebnisse wurden erfolgreich übermittelt
             </p>
           </div>
         </div>
