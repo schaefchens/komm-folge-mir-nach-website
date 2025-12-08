@@ -8,7 +8,22 @@ import { Badge } from "@/components/ui/badge";
 
 // Timer constants (in milliseconds)
 const QUESTION_SHOW_TIME = 3000;
-const ANSWER_TIME = 10000;
+const ANSWER_TIME = 7000;
+
+// Helper function to format time in minutes and seconds
+const formatDuration = (milliseconds: number): string => {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) {
+    return `${seconds} Sekunden`;
+  } else if (seconds === 0) {
+    return `${minutes} Minute${minutes > 1 ? 'n' : ''}`;
+  } else {
+    return `${minutes} Minute${minutes > 1 ? 'n' : ''} und ${seconds} Sekunde${seconds > 1 ? 'n' : ''}`;
+  }
+};
 
 interface QuestionnaireListItem {
   id: string;
@@ -348,6 +363,15 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
                   Du hast pro Frage {ANSWER_TIME / 1000} Sekunden Zeit zum Antworten.
                   Antworte spontan und ehrlich!
                 </p>
+                {(() => {
+                  const totalQuestions = sections.reduce((total, section) => total + section.questions.length, 0);
+                  const estimatedTime = (QUESTION_SHOW_TIME + ANSWER_TIME) * totalQuestions;
+                  return (
+                    <p className="text-center text-muted-foreground font-medium">
+                      Geschätzte Dauer: {formatDuration(estimatedTime)} ({totalQuestions} Fragen)
+                    </p>
+                  );
+                })()}
                 <div className="flex justify-center gap-3 pt-4">
                   <Button variant="outline" onClick={goBackToList}>
                     <ArrowLeft className="w-4 h-4 mr-2" />

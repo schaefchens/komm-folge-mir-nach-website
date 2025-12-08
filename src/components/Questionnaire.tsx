@@ -3,11 +3,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Clock, ChevronRight, ArrowLeft } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
 
 // Timer constants (in milliseconds)
 const QUESTION_SHOW_TIME = 3000; // Time to show question before auto-revealing choices (3 seconds)
-const ANSWER_TIME = 10000; // Time to answer question once choices are revealed (10 seconds)
+const ANSWER_TIME = 7000; // Time to answer question once choices are revealed (7 seconds)
+
+// Helper function to format time in minutes and seconds
+const formatDuration = (milliseconds: number): string => {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) {
+    return `${seconds} Sekunden`;
+  } else if (seconds === 0) {
+    return `${minutes} Minute${minutes > 1 ? 'n' : ''}`;
+  } else {
+    return `${minutes} Minute${minutes > 1 ? 'n' : ''} und ${seconds} Sekunde${seconds > 1 ? 'n' : ''}`;
+  }
+};
 
 interface Scale {
   min: number;
@@ -217,25 +232,6 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
     setTimeLeft(ANSWER_TIME / 1000);
   };
 
-  const goToPreviousSection = () => {
-    if (currentSectionIndex > 0) {
-      setCurrentSectionIndex(prev => prev - 1);
-      setCurrentQuestionIndex(0);
-      setShowChoices(false);
-      setTimeLeft(ANSWER_TIME / 1000);
-      setIsAnswered(false);
-    }
-  };
-
-  const goToNextSection = () => {
-    if (currentSectionIndex < sections.length - 1) {
-      setCurrentSectionIndex(prev => prev + 1);
-      setCurrentQuestionIndex(0);
-      setShowChoices(false);
-      setTimeLeft(ANSWER_TIME / 1000);
-      setIsAnswered(false);
-    }
-  };
 
   if (sections.length === 0) return null;
 
@@ -275,6 +271,15 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                 Du hast pro Frage {ANSWER_TIME / 1000} Sekunden Zeit zum Antworten.
                 Antworte spontan und ehrlich!
               </p>
+              {(() => {
+                const totalQuestions = sections.reduce((total, section) => total + section.questions.length, 0);
+                const estimatedTime = (QUESTION_SHOW_TIME + ANSWER_TIME) * totalQuestions;
+                return (
+                  <p className="text-center text-muted-foreground font-medium">
+                    Geschätzte Dauer: {formatDuration(estimatedTime)} ({totalQuestions} Fragen)
+                  </p>
+                );
+              })()}
               <div className="flex justify-center pt-4">
                 <Button
                   onClick={() => setShowIntro(false)}
@@ -458,27 +463,6 @@ const Questionnaire = ({ open, onComplete, onOpenChange, identifier }: Questionn
                     </motion.div>
                   )}
 
-                  {/* Section Navigation */}
-                  <div className="flex justify-between pt-4 border-t border-border/50">
-                    <Button
-                      variant="outline"
-                      onClick={goToPreviousSection}
-                      disabled={currentSectionIndex === 0}
-                      className="flex items-center gap-2"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Vorheriger Abschnitt
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={goToNextSection}
-                      disabled={currentSectionIndex >= sections.length - 1}
-                      className="flex items-center gap-2"
-                    >
-                      Nächster Abschnitt
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
                 </>
               )}
                 </motion.div>
