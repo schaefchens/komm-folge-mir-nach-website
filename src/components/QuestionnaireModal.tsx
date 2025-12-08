@@ -233,10 +233,10 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
     } else {
       // All questions completed - submit answers
       try {
-        const response = await fetch('/questionaire.php', {
+        const response = await fetch(`/questionaire.php?questionnaire=${encodeURIComponent(selectedQuestionnaireId)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: finalAnswers, questionnaire: selectedQuestionnaireId }),
+          body: JSON.stringify({ answers: finalAnswers }),
         });
         const data = await response.json();
         if (data.success) {
