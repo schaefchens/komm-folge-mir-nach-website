@@ -4,7 +4,11 @@ import heroImage from "@/assets/hero-shepherd.jpg";
 import QuestionnaireModal from "./QuestionnaireModal";
 import { BookOpen } from "lucide-react";
 
-const Hero = () => {
+interface HeroProps {
+  showJoinButton?: boolean;
+}
+
+const Hero = ({ showJoinButton = false }: HeroProps) => {
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
   const [isButtonExpanded, setIsButtonExpanded] = useState(false);
 
@@ -158,24 +162,26 @@ const Hero = () => {
               </a>
             </motion.div>
             
-            <motion.div whileHover={{
-            scale: 1.05
-          }} whileTap={{
-            scale: 0.95
-          }}>
-              <a href="#signup" className="group relative inline-flex items-center gap-3 bg-gradient-warm text-white px-10 py-5 rounded-full text-lg font-semibold shadow-elegant hover:shadow-hover transition-all duration-300 overflow-hidden">
-                <span className="relative z-10">Jetzt Nachfolgen</span>
-                <motion.span animate={{
-                x: [0, 5, 0]
-              }} transition={{
-                duration: 1.5,
-                repeat: Infinity
-              }} className="relative z-10">
-                  →
-                </motion.span>
-                <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </a>
-            </motion.div>
+            {showJoinButton && (
+              <motion.div whileHover={{
+                scale: 1.05
+              }} whileTap={{
+                scale: 0.95
+              }}>
+                <a href="#signup" className="group relative inline-flex items-center gap-3 bg-gradient-warm text-white px-10 py-5 rounded-full text-lg font-semibold shadow-elegant hover:shadow-hover transition-all duration-300 overflow-hidden">
+                  <span className="relative z-10">Jetzt Nachfolgen</span>
+                  <motion.span animate={{
+                  x: [0, 5, 0]
+                }} transition={{
+                  duration: 1.5,
+                  repeat: Infinity
+                }} className="relative z-10">
+                    →
+                  </motion.span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </a>
+              </motion.div>
+            )}
           </motion.div>
         </motion.div>
       </div>

@@ -3,10 +3,14 @@ import CommunityInfo from "@/components/CommunityInfo";
 import SignupForm from "@/components/SignupForm";
 import { motion } from "framer-motion";
 const Index = () => {
+  // Check if join=1 query parameter is present
+  const urlParams = new URLSearchParams(window.location.search);
+  const isJoinMode = urlParams.get('join') === '1';
+
   return <main className="min-h-screen">
-      <Hero />
+      <Hero showJoinButton={isJoinMode} />
       <CommunityInfo />
-      <SignupForm />
+      {isJoinMode && <SignupForm />}
       
       <footer className="relative bg-card py-12 border-t border-border/50 overflow-hidden">
         {/* Subtle gradient overlay */}
