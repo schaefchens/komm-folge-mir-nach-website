@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Clock, ChevronRight, BookOpen, Trophy, Target, PartyPopper, ArrowLeft, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Generate cryptographic identifier hash from name and questionnaire id
+const generateIdentifier = async (name: string, questionnaireId: string): Promise<string> => {
+  const input = `${name.trim()}_${questionnaireId}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+};
 
 // Timer constants (in milliseconds)
 const QUESTION_SHOW_TIME = 3000;
@@ -106,6 +117,7 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
   const [questionnaireList, setQuestionnaireList] = useState<QuestionnaireListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
   
   // Questionnaire state
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireData | null>(null);
@@ -125,6 +137,7 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
   useEffect(() => {
     if (open) {
       setView('list');
+      setUserName(""); // Reset name when dialog opens
       setLoading(true);
       fetch('/questionaire.php?list=true')
         .then(res => res.json())
@@ -143,7 +156,14 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
     setSelectedQuestionnaireId(id);
     setLoading(true);
     try {
-      const response = await fetch(`/questionaire.php?questionnaire=${encodeURIComponent(id)}`);
+      // Only generate identifier if user provided a name
+      let url = `/questionaire.php?questionnaire=${encodeURIComponent(id)}`;
+      if (userName.trim()) {
+        const identifier = await generateIdentifier(userName, id);
+        url += `&identifier=${encodeURIComponent(identifier)}`;
+      }
+
+      const response = await fetch(url);
       const data = await response.json();
       if (data.success && data.sections) {
         setQuestionnaire(data.questionnaire);
@@ -248,10 +268,16 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
     } else {
       // All questions completed - submit answers
       try {
+        const requestBody: any = { answers: finalAnswers };
+        if (userName.trim()) {
+          const identifier = await generateIdentifier(userName, selectedQuestionnaireId!);
+          requestBody.identifier = identifier;
+        }
+
         const response = await fetch(`/questionaire.php?questionnaire=${encodeURIComponent(selectedQuestionnaireId)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: finalAnswers }),
+          body: JSON.stringify(requestBody),
         });
         const data = await response.json();
         if (data.success) {
@@ -274,6 +300,7 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
     onOpenChange(false);
     setView('list');
     resetQuestionnaireState();
+    setUserName("");
   };
 
   const goBackToList = () => {
@@ -320,6 +347,24 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
                 <p className="text-muted-foreground text-center">
                   Wähle einen Fragebogen aus, um dein Glaubenswissen zu testen.
                 </p>
+
+                <div className="space-y-2">
+                  <label htmlFor="userName" className="text-sm font-medium text-muted-foreground">
+                    Dein Name (optional)
+                  </label>
+                  <Input
+                    id="userName"
+                    type="text"
+                    placeholder="Gib deinen Namen ein..."
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full"
+                    maxLength={100}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Wenn angegeben, wird Dein Test gespeichert.
+                  </p>
+                </div>
                 {loading ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
