@@ -53,7 +53,42 @@ function validateQuestionnaire($questionnaire) {
 }
 
 // Get questionnaire ID from request
-$questionnaireId = isset($_GET['questionnaire']) ? trim($_GET['questionnaire']) : 'glaubensfragebogen_v1';
+$questionnaireId = isset($_GET['questionnaire']) ? trim($_GET['questionnaire']) : null;
+
+// Check if listing questionnaires is requested
+$listQuestionnaires = isset($_GET['list']) && $_GET['list'] === 'true';
+
+if ($listQuestionnaires) {
+    // Hardcoded array of available questionnaire files
+    $availableQuestionnaires = [
+        'glaubensfragebogen_v1',
+        'simple_beliefs_v1'
+    ];
+
+    $questionnaireList = [];
+
+    foreach ($availableQuestionnaires as $qId) {
+        $questionnaireData = loadQuestionnaire($qId);
+        if ($questionnaireData && validateQuestionnaire($questionnaireData)) {
+            $questionnaireList[] = [
+                'id' => $questionnaireData['id'],
+                'title' => $questionnaireData['title'],
+                'description' => $questionnaireData['description']
+            ];
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'questionnaires' => $questionnaireList
+    ]);
+    exit();
+}
+
+// Default questionnaire if none specified
+if (!$questionnaireId) {
+    $questionnaireId = 'glaubensfragebogen_v1';
+}
 
 // Load questionnaire
 $questionnaire = loadQuestionnaire($questionnaireId);
