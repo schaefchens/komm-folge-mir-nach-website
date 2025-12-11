@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type FormView = "intent" | "form" | "results";
+type FormView = "intent" | "form" | "results" | "success";
 
 // Generate cryptographic identifier hash from contact info
 const generateIdentifier = async (contact: string, service: string): Promise<string> => {
@@ -28,6 +28,18 @@ const generateIdentifier = async (contact: string, service: string): Promise<str
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+};
+
+// Check if questionnaire already exists for an identifier
+const checkQuestionnaireExists = async (identifier: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`/questionaire.php?check_exists=true&identifier=${encodeURIComponent(identifier)}`);
+    const data = await response.json();
+    return data.exists || false;
+  } catch (error) {
+    console.error('Error checking questionnaire existence:', error);
+    return false;
+  }
 };
 
 const SignupForm = () => {
@@ -59,8 +71,62 @@ const SignupForm = () => {
     const identifier = await generateIdentifier(contact, service);
     setQuestionnaireIdentifier(identifier);
 
-    setShowQuestionnaire(true);
+    // Check if questionnaire already exists for this identifier
+    const exists = await checkQuestionnaireExists(identifier);
+
+    if (exists) {
+      // Questionnaire already exists - send invitation directly without showing questionnaire or results
+      await sendInvitation();
+    } else {
+      // Questionnaire doesn't exist - show it to user
+      setShowQuestionnaire(true);
+    }
   };
+  // Send invitation message (used when questionnaire already exists)
+  const sendInvitation = async () => {
+    setIsSubmitting(true);
+    try {
+      // Build query parameters
+      const contactParam = service === "sms" ? "mobile" : "email";
+      let url = `https://komm-folge-mir-nach.de/join.php?to=${service}&${contactParam}=${encodeURIComponent(contact)}&questionnaire=glaubensfragebogen_v1`;
+      if (message.trim()) {
+        url += `&message=${encodeURIComponent(message)}`;
+      }
+      if (inviteCode.trim()) {
+        url += `&code=${encodeURIComponent(inviteCode)}`;
+      }
+
+      const response = await fetch(url, {
+        method: "GET"
+      });
+      const data = await response.json();
+      const serviceName = service === "sms" ? "SMS" : "E-Mail";
+      if (data.success) {
+        // Success - show success view (congratulation message without results)
+        setCurrentView("success");
+      } else {
+        // Error - show error message
+        toast({
+          title: "Fehler",
+          description: data.message || `Es gab ein Problem beim Versenden der ${serviceName}-Nachricht. Bitte versuche es erneut.`,
+          variant: "destructive"
+        });
+        // Reset submitting state so user can try again
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      // Error - show error message
+      toast({
+        title: "Fehler",
+        description: `Es gab ein Problem beim Versenden der ${service === "sms" ? "SMS" : "E-Mail"}. Bitte versuche es erneut.`,
+        variant: "destructive"
+      });
+      // Reset submitting state so user can try again
+      setIsSubmitting(false);
+    }
+    setIsSubmitting(false);
+  };
+
   const handleQuestionnaireComplete = async (
     answers: Record<string, string | null>,
     overall_percentage?: number,
@@ -417,11 +483,66 @@ const SignupForm = () => {
               </motion.div>
             )}
 
+            {currentView === "success" && (
+              <motion.div key="success" className="relative group">
+                {/* Glow effect */}
+                <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
+
+                {/* Card */}
+                <div className="relative bg-card rounded-3xl p-8 md:p-12 shadow-elegant border border-border/50">
+                  <div className="text-center space-y-8">
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+                      <div className="w-20 h-20 rounded-full bg-gradient-warm flex items-center justify-center shadow-elegant mx-auto mb-6">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+
+                      <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        Erfolg!
+                      </h3>
+
+                      <p className="text-lg md:text-xl text-muted-foreground mb-6">
+                        Wir haben dir eine {service === "sms" ? "SMS" : "E-Mail"}-Nachricht an{" "}
+                        <span className="font-semibold text-foreground">{contact}</span>{" "}
+                        gesendet mit einem Link zur Community.
+                      </p>
+
+                      <p className="text-base text-muted-foreground mb-8">
+                        Du kannst diesen Link verwenden, um dich unserer Gemeinschaft anzuschließen und Jesus gemeinsam nachzufolgen.
+                      </p>
+                    </motion.div>
+
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button
+                        onClick={() => {
+                          // Reset form for next user
+                          setContact("");
+                          setMessage("");
+                          setInviteCode("");
+                          setQuestionnaireResults(null);
+                          setQuestionnaireOverallScore(null);
+                          setQuestionnaireOverallPercentage(null);
+                          setQuestionnaireDimensionScores(null);
+                          setQuestionnaireAssessment(null);
+                          setQuestionnaireIdentifier('');
+                          setCurrentView("intent");
+                        }}
+                        className="bg-gradient-warm hover:shadow-hover transition-all duration-300 text-white border-0 px-8 py-4 text-lg font-semibold"
+                      >
+                        Neue Anmeldung
+                      </Button>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {currentView === "results" && questionnaireResults && (
               <motion.div key="results" className="relative group">
                 {/* Glow effect */}
                 <div className="absolute -inset-1 bg-gradient-warm opacity-10 blur-2xl rounded-3xl group-hover:opacity-20 transition-opacity duration-500" />
-                
+
                 {/* Card */}
                 <div className="relative bg-card rounded-3xl p-8 md:p-12 shadow-elegant border border-border/50">
                   <QuestionnaireResults

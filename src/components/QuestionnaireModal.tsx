@@ -157,7 +157,7 @@ const QuestionnaireModal = ({ open, onOpenChange }: QuestionnaireModalProps) => 
     setLoading(true);
     try {
       // Only generate identifier if user provided a name
-      let url = `/questionaire.php?questionnaire=${encodeURIComponent(id)}`;
+      let url = `/questionaire.php?questionnaire=${encodeURIComponent(id)}&fresh=true`;
       if (userName.trim()) {
         const identifier = await generateIdentifier(userName, id);
         url += `&identifier=${encodeURIComponent(identifier)}`;

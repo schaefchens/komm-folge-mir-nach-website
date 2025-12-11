@@ -58,6 +58,22 @@ $questionnaireId = isset($_GET['questionnaire']) ? trim($_GET['questionnaire']) 
 // Check if listing questionnaires is requested
 $listQuestionnaires = isset($_GET['list']) && $_GET['list'] === 'true';
 
+// Check if checking for existing questionnaire results
+$checkExists = isset($_GET['check_exists']) && $_GET['check_exists'] === 'true';
+$checkIdentifier = isset($_GET['identifier']) ? trim($_GET['identifier']) : null;
+
+if ($checkExists && $checkIdentifier) {
+    // Check if questionnaire results exist for the given identifier
+    $resultsFile = $questionnairesDir . '/' . $checkIdentifier . '.json';
+    $exists = file_exists($resultsFile);
+
+    echo json_encode([
+        'success' => true,
+        'exists' => $exists
+    ]);
+    exit();
+}
+
 if ($listQuestionnaires) {
     // Hardcoded array of available questionnaire files
     $availableQuestionnaires = [
@@ -167,6 +183,15 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Get identifier from query parameter
         $identifier = isset($_GET['identifier']) ? trim($_GET['identifier']) : null;
+
+        // Check for fresh parameter - delete existing questionnaire if requested
+        $fresh = isset($_GET['fresh']) && $_GET['fresh'] === 'true';
+        if ($fresh && $identifier) {
+            $resultsFile = $questionnairesDir . '/' . $identifier . '.json';
+            if (file_exists($resultsFile)) {
+                unlink($resultsFile);
+            }
+        }
 
         // Return questionnaire data
         $publicQuestions = [];
