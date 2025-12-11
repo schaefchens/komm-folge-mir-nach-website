@@ -6,11 +6,12 @@ const Index = () => {
   // Check if join=1 query parameter is present
   const urlParams = new URLSearchParams(window.location.search);
   const isJoinMode = urlParams.get('join') === '1';
+  const inviteCode = urlParams.get('code') || '';
 
   return <main className="min-h-screen">
       <Hero showJoinButton={isJoinMode} />
       <CommunityInfo />
-      {isJoinMode && <SignupForm />}
+      {isJoinMode && <SignupForm inviteCode={inviteCode} />}
       
       <footer className="relative bg-card py-12 border-t border-border/50 overflow-hidden">
         {/* Subtle gradient overlay */}

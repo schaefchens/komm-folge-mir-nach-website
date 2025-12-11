@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ const checkQuestionnaireExists = async (identifier: string): Promise<boolean> =>
   }
 };
 
-const SignupForm = () => {
+const SignupForm = ({ inviteCode: initialInviteCode = '' }: { inviteCode?: string }) => {
   const [contact, setContact] = useState("");
   const [service, setService] = useState<"sms" | "email">("sms");
   const [message, setMessage] = useState("");
@@ -63,6 +63,13 @@ const SignupForm = () => {
     toast
   } = useToast();
   const contactInputRef = useRef<HTMLInputElement>(null);
+
+  // Set initial invite code from URL parameter
+  useEffect(() => {
+    if (initialInviteCode) {
+      setInviteCode(initialInviteCode);
+    }
+  }, [initialInviteCode]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contact.trim()) return;
