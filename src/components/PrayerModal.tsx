@@ -241,56 +241,28 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                         className="overflow-hidden"
                       >
                         <div className="pt-3 border-t border-border/50 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Kurze Nachricht (optional)..."
+                              value={reactionText}
+                              onChange={(e) => setReactionText(e.target.value)}
+                              maxLength={50}
+                              className="flex-1 text-sm"
+                            />
+                          </div>
                           <div className="flex flex-wrap gap-2">
                             {availableEmojis.map((emoji) => (
                               <motion.button
                                 key={emoji}
                                 whileHover={{ scale: 1.2 }}
                                 whileTap={{ scale: 0.9 }}
-                                onClick={() => setSelectedEmoji(emoji)}
-                                className={`text-2xl p-1 rounded-lg transition-colors ${
-                                  selectedEmoji === emoji
-                                    ? "bg-primary/20 ring-2 ring-primary"
-                                    : "hover:bg-muted"
-                                }`}
+                                onClick={() => handleReaction(prayer.id, emoji, reactionText)}
+                                className="text-2xl p-1 rounded-lg transition-colors hover:bg-muted"
                               >
                                 {emoji}
                               </motion.button>
                             ))}
                           </div>
-
-                          {selectedEmoji && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="flex gap-2"
-                            >
-                              <Input
-                                placeholder="Kurze Nachricht (optional)..."
-                                value={reactionText}
-                                onChange={(e) => setReactionText(e.target.value)}
-                                maxLength={50}
-                                className="flex-1 text-sm"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={() => handleReaction(prayer.id, selectedEmoji, reactionText)}
-                                className="bg-gradient-warm text-white"
-                              >
-                                <Send className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setSelectedEmoji(null);
-                                  setReactionText("");
-                                }}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </motion.div>
-                          )}
                         </div>
                       </motion.div>
                     )}
