@@ -23,11 +23,12 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 1.5, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          onMouseEnter={() => setIsQuestionnaireButtonExpanded(true)}
-          onMouseLeave={() => setIsQuestionnaireButtonExpanded(false)}
           onClick={() => {
-            setIsQuestionnaireButtonExpanded(false);
-            setShowQuestionnaireModal(true);
+            if (!isQuestionnaireButtonExpanded) {
+              setIsQuestionnaireButtonExpanded(true);
+            } else {
+              setShowQuestionnaireModal(true);
+            }
           }}
           className="bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-all duration-300 flex items-center gap-2 text-sm font-semibold hover:pr-8 overflow-hidden"
           whileHover={{ scale: 1.05 }}
@@ -52,11 +53,12 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 1.7, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          onMouseEnter={() => setIsPrayerButtonExpanded(true)}
-          onMouseLeave={() => setIsPrayerButtonExpanded(false)}
           onClick={() => {
-            setIsPrayerButtonExpanded(false);
-            setShowPrayerModal(true);
+            if (!isPrayerButtonExpanded) {
+              setIsPrayerButtonExpanded(true);
+            } else {
+              setShowPrayerModal(true);
+            }
           }}
           className="bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-all duration-300 flex items-center gap-2 text-sm font-semibold hover:pr-8 overflow-hidden"
           whileHover={{ scale: 1.05 }}
