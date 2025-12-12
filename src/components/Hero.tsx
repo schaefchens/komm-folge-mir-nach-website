@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-shepherd.jpg";
 import QuestionnaireModal from "./QuestionnaireModal";
@@ -14,6 +14,13 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
   const [showPrayerModal, setShowPrayerModal] = useState(false);
   const [isQuestionnaireButtonExpanded, setIsQuestionnaireButtonExpanded] = useState(false);
   const [isPrayerButtonExpanded, setIsPrayerButtonExpanded] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("prayer") === "1") {
+      setShowPrayerModal(true);
+    }
+  }, []);
 
   return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Banderole Buttons - Top Right */}
