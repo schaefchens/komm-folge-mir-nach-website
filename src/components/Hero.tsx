@@ -27,6 +27,7 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
             if (!isQuestionnaireButtonExpanded) {
               setIsQuestionnaireButtonExpanded(true);
             } else {
+              setIsQuestionnaireButtonExpanded(false);
               setShowQuestionnaireModal(true);
             }
           }}
@@ -57,6 +58,7 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
             if (!isPrayerButtonExpanded) {
               setIsPrayerButtonExpanded(true);
             } else {
+              setIsPrayerButtonExpanded(false);
               setShowPrayerModal(true);
             }
           }}
