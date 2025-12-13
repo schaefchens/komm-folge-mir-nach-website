@@ -154,7 +154,15 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   });
   const [showVerification, setShowVerification] = useState(false);
   const [prayerFilter, setPrayerFilter] = useState<'all' | 'own' | 'unanswered' | 'unseen' | 'seen'>('all');
+  const [hashtagSearch, setHashtagSearch] = useState('');
   const { toast } = useToast();
+
+  // Extract hashtags from text
+  const extractHashtags = (text: string): string[] => {
+    const hashtagRegex = /#[\w]+/g;
+    const matches = text.match(hashtagRegex);
+    return matches ? [...new Set(matches)] : []; // Remove duplicates
+  };
 
   const handleSubmitPrayer = () => {
     if (!currentUser) {
@@ -404,6 +412,18 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </div>
         )}
 
+        {/* Hashtag Search */}
+        {currentUser && (
+          <div className="border-b border-border pb-3">
+            <Input
+              placeholder="Suche nach Hashtags (z.B. #familie #gesundheit) - UND-Verknüpfung"
+              value={hashtagSearch}
+              onChange={(e) => setHashtagSearch(e.target.value)}
+              className="text-sm"
+            />
+          </div>
+        )}
+
         <ScrollArea className="flex-1 pr-4 -mr-4 min-h-0">
           <div className="space-y-4 py-4">
             <AnimatePresence mode="popLayout">
@@ -411,18 +431,41 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                 .filter(prayer => {
                   if (!currentUser) return true; // Show all if not logged in
 
+                  // Apply prayer filter
+                  let passesFilter = true;
                   switch (prayerFilter) {
                     case 'own':
-                      return prayer.creatorUsername === currentUser.username;
+                      passesFilter = prayer.creatorUsername === currentUser.username;
+                      break;
                     case 'unanswered':
-                      return prayer.reactions.length === 0;
+                      passesFilter = prayer.reactions.length === 0;
+                      break;
                     case 'unseen':
-                      return !prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      passesFilter = !prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      break;
                     case 'seen':
-                      return prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      passesFilter = prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      break;
                     default:
-                      return true;
+                      passesFilter = true;
                   }
+
+                  if (!passesFilter) return false;
+
+                  // Apply hashtag filter (AND logic)
+                  if (hashtagSearch.trim()) {
+                    const searchHashtags = hashtagSearch.trim().split(/\s+/).filter(tag => tag.startsWith('#'));
+                    const prayerHashtags = extractHashtags(prayer.text);
+
+                    // All search hashtags must be present in prayer hashtags (AND logic)
+                    const hasAllHashtags = searchHashtags.every(searchTag =>
+                      prayerHashtags.some(prayerTag => prayerTag.toLowerCase() === searchTag.toLowerCase())
+                    );
+
+                    return hasAllHashtags;
+                  }
+
+                  return true;
                 })
                 .map((prayer, index) => (
                 <motion.div
@@ -486,6 +529,24 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                       {prayer.text}
                     </ReactMarkdown>
                   </div>
+
+                  {/* Hashtags */}
+                  {(() => {
+                    const hashtags = extractHashtags(prayer.text);
+                    return hashtags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {hashtags.map((hashtag, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-md cursor-pointer hover:bg-primary/20 transition-colors"
+                            onClick={() => setHashtagSearch(prev => prev ? `${prev} ${hashtag}` : hashtag)}
+                          >
+                            {hashtag}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                   {/* Reactions */}
                   <div className="flex flex-wrap gap-2 items-center">
