@@ -176,7 +176,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </p>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[50vh]">
+        <ScrollArea className="flex-1 pr-4 -mr-4 h-[50vh]">
           <div className="space-y-4 py-4">
             <AnimatePresence mode="popLayout">
               {prayers.map((prayer, index) => (
