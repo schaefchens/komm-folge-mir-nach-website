@@ -153,6 +153,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
     password: "",
   });
   const [showVerification, setShowVerification] = useState(false);
+  const [prayerFilter, setPrayerFilter] = useState<'all' | 'own' | 'unanswered' | 'unseen' | 'seen'>('all');
   const { toast } = useToast();
 
   const handleSubmitPrayer = () => {
@@ -376,10 +377,54 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </div>
         </DialogHeader>
 
+        {/* Prayer Filter */}
+        {currentUser && (
+          <div className="border-b border-border pb-3">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide flex-nowrap px-1">
+              {[
+                { key: 'all', label: 'Alle', count: prayers.length },
+                { key: 'unanswered', label: 'Unbeantwortete', count: prayers.filter(p => p.reactions.length === 0).length },
+                { key: 'unseen', label: 'Ungesehene', count: prayers.filter(p => !p.reactions.some(r => r.userReactions.includes(currentUser.username))).length },
+                { key: 'seen', label: 'Gesehene', count: prayers.filter(p => p.reactions.some(r => r.userReactions.includes(currentUser.username))).length },
+                { key: 'own', label: 'Eigene', count: prayers.filter(p => p.creatorUsername === currentUser.username).length }
+              ].map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setPrayerFilter(key as any)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                    prayerFilter === key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <ScrollArea className="flex-1 pr-4 -mr-4 min-h-0">
           <div className="space-y-4 py-4">
             <AnimatePresence mode="popLayout">
-              {prayers.map((prayer, index) => (
+              {prayers
+                .filter(prayer => {
+                  if (!currentUser) return true; // Show all if not logged in
+
+                  switch (prayerFilter) {
+                    case 'own':
+                      return prayer.creatorUsername === currentUser.username;
+                    case 'unanswered':
+                      return prayer.reactions.length === 0;
+                    case 'unseen':
+                      return !prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                    case 'seen':
+                      return prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                    default:
+                      return true;
+                  }
+                })
+                .map((prayer, index) => (
                 <motion.div
                   key={prayer.id}
                   initial={{ opacity: 0, y: 20 }}
