@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, Send, X, User, LogOut } from "lucide-react";
+import { Heart, Send, X, User, LogOut, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -155,6 +155,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [showVerification, setShowVerification] = useState(false);
   const [prayerFilter, setPrayerFilter] = useState<'all' | 'own' | 'unanswered' | 'unseen' | 'seen'>('all');
   const [hashtagSearch, setHashtagSearch] = useState('');
+  const [showSearchBar, setShowSearchBar] = useState(false);
   const { toast } = useToast();
 
   // Extract hashtags from text
@@ -388,7 +389,15 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
         {/* Prayer Filter */}
         {currentUser && (
           <div className="border-b border-border pb-3">
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide flex-nowrap px-1">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide flex-nowrap px-1 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSearchBar(!showSearchBar)}
+                className="h-8 w-8 p-0 mr-2 flex-shrink-0"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
               {[
                 { key: 'all', label: 'Alle', count: prayers.length },
                 { key: 'unanswered', label: 'Unbeantwortete', count: prayers.filter(p => p.reactions.length === 0).length },
@@ -413,16 +422,37 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
         )}
 
         {/* Hashtag Search */}
-        {currentUser && (
-          <div className="border-b border-border pb-3">
-            <Input
-              placeholder="Suche nach Hashtags (z.B. #familie #gesundheit) - UND-Verknüpfung"
-              value={hashtagSearch}
-              onChange={(e) => setHashtagSearch(e.target.value)}
-              className="text-sm"
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {currentUser && showSearchBar && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: "12px" }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="border-b border-border pb-3">
+                <div className="relative">
+                  <Input
+                    placeholder="Suche nach Hashtags (z.B. #familie #gesundheit) - UND-Verknüpfung"
+                    value={hashtagSearch}
+                    onChange={(e) => setHashtagSearch(e.target.value)}
+                    className="text-sm pr-8"
+                  />
+                  {hashtagSearch && (
+                    <button
+                      onClick={() => setHashtagSearch('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Suche löschen"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <ScrollArea className="flex-1 pr-4 -mr-4 min-h-0">
           <div className="space-y-4 py-4">
@@ -539,7 +569,16 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                           <span
                             key={idx}
                             className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-md cursor-pointer hover:bg-primary/20 transition-colors"
-                            onClick={() => setHashtagSearch(prev => prev ? `${prev} ${hashtag}` : hashtag)}
+                            onClick={() => {
+                              setHashtagSearch(prev => {
+                                const currentHashtags = prev.trim().split(/\s+/).filter(tag => tag.startsWith('#'));
+                                const hashtagLower = hashtag.toLowerCase();
+                                const isAlreadyPresent = currentHashtags.some(tag => tag.toLowerCase() === hashtagLower);
+                                if (isAlreadyPresent) return prev;
+                                return prev ? `${prev} ${hashtag}` : hashtag;
+                              });
+                              setShowSearchBar(true);
+                            }}
                           >
                             {hashtag}
                           </span>
