@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, Send, X, User, LogOut, Search } from "lucide-react";
+import { Heart, Send, X, User, LogOut, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -72,6 +72,37 @@ const mockPrayers = [
     creatorUsername: "sarah_user",
   },
 ];
+
+// Mock scheduled prayer calls
+const getMockScheduledPrayerCall = () => {
+  const now = new Date();
+  const random = Math.random();
+
+  // 40% chance of imminent/started call (within target range)
+  if (random < 0.4) {
+    // 50% chance of already started, 50% chance of starting within 15 minutes
+    if (Math.random() < 0.5) {
+      // Already started (within last 30 minutes to 2 hours ago)
+      return new Date(now.getTime() - (Math.random() * 90 + 30) * 60 * 1000);
+    } else {
+      // Starting within 15 minutes
+      return new Date(now.getTime() + Math.random() * 15 * 60 * 1000);
+    }
+  }
+  // 30% chance of no upcoming call
+  else if (random < 0.7) {
+    return null;
+  }
+  // 30% chance of future calls (beyond 15 minutes)
+  else {
+    const futureOptions = [
+      new Date(now.getTime() + (15 + Math.random() * 45) * 60 * 1000), // 15-60 minutes from now
+      new Date(now.getTime() + Math.random() * 24 * 60 * 60 * 1000), // Within next day
+      new Date(now.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000), // Within next week
+    ];
+    return futureOptions[Math.floor(Math.random() * futureOptions.length)];
+  }
+};
 
 const availableEmojis = ["🙏", "❤️", "🕊️", "✝️", "🎉", "🌟", "💪", "🤗", "❓", "💬"];
 
@@ -156,7 +187,53 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [prayerFilter, setPrayerFilter] = useState<'all' | 'own' | 'unanswered' | 'unseen' | 'seen'>('all');
   const [hashtagSearch, setHashtagSearch] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
+  const [scheduledCall, setScheduledCall] = useState<Date | null>(getMockScheduledPrayerCall());
+  const [countdown, setCountdown] = useState<string>('');
+  const [hideScheduledCall, setHideScheduledCall] = useState(false);
   const { toast } = useToast();
+
+  // Check if scheduled call should be clickable (within 15 minutes or started)
+  const isScheduledCallClickable = () => {
+    if (!scheduledCall) return false;
+    const now = new Date();
+    const diffMs = scheduledCall.getTime() - now.getTime();
+    return diffMs <= 15 * 60 * 1000; // Within 15 minutes
+  };
+
+  // Update countdown every second
+  useEffect(() => {
+    const updateCountdown = () => {
+      if (!scheduledCall) return;
+
+      const now = new Date();
+      const diffMs = scheduledCall.getTime() - now.getTime();
+
+      if (diffMs <= 0) {
+        setCountdown('Jetzt live!');
+        return;
+      }
+
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      if (diffDays > 0) {
+        setCountdown(`in ${diffDays} Tag${diffDays > 1 ? 'en' : ''} ${diffHours} Std.`);
+      } else if (diffHours > 0) {
+        setCountdown(`in ${diffHours} Std. ${diffMinutes} Min.`);
+      } else if (diffMinutes > 0) {
+        setCountdown(`in ${diffMinutes} Min. ${diffSeconds} Sek.`);
+      } else {
+        setCountdown(`in ${diffSeconds} Sek.`);
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [scheduledCall]);
 
   // Extract hashtags from text
   const extractHashtags = (text: string): string[] => {
@@ -385,6 +462,72 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
             </div>
           </div>
         </DialogHeader>
+
+        {/* Scheduled Prayer Call */}
+        {!hideScheduledCall && (
+          <div className="px-6 -mx-6">
+            {scheduledCall ? (
+              <div className="relative">
+                <div
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all duration-300 ${
+                    isScheduledCallClickable()
+                      ? 'cursor-pointer text-white bg-gradient-to-r from-red-500 via-orange-500 to-red-600 dark:from-red-600 dark:via-orange-600 dark:to-red-700 border-red-400 dark:border-red-500 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 font-semibold text-base'
+                      : 'text-sm text-muted-foreground bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-100/50 dark:hover:bg-blue-950/30'
+                  }`}
+                  onClick={isScheduledCallClickable() ? () => {
+                    // Handle joining the live prayer call
+                    toast({
+                      title: "Verbindung zum Gebetsraum",
+                      description: "Du wirst zum gemeinsamen Gebetsraum weitergeleitet...",
+                    });
+                  } : undefined}
+                >
+                  <Video className={`${
+                    isScheduledCallClickable() ? 'w-5 h-5 text-white' : 'w-4 h-4 text-blue-600'
+                  }`} />
+                  <span>
+                    Gemeinsames Gebet: {scheduledCall.toLocaleDateString('de-DE', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })} - {countdown}
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHideScheduledCall(true);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Nachricht ausblenden"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 px-4 py-2 rounded-lg border border-amber-200/50 dark:border-amber-800/50">
+                  <Heart className="w-4 h-4 text-amber-600" />
+                  <span>
+                    Kein gemeinsames Gebet geplant. Schau bald wieder vorbei!
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setHideScheduledCall(true);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Nachricht ausblenden"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Prayer Filter */}
         {currentUser && (
