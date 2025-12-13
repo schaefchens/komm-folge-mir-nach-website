@@ -66,7 +66,7 @@ const mockPrayers = [
   },
 ];
 
-const availableEmojis = ["🙏", "❤️", "🕊️", "✝️", "🎉", "🌟", "💪", "🤗"];
+const availableEmojis = ["🙏", "❤️", "🕊️", "✝️", "🎉", "🌟", "💪", "🤗", "❓", "💬"];
 
 interface Reaction {
   emoji: string;
@@ -165,7 +165,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <Heart className="w-6 h-6 text-primary fill-primary/20" />
@@ -176,7 +176,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </p>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4 max-h-[50vh]">
+        <ScrollArea className="flex-1 pr-4 -mr-4 min-h-0">
           <div className="space-y-4 py-4">
             <AnimatePresence mode="popLayout">
               {prayers.map((prayer, index) => (
@@ -230,6 +230,22 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                       <span>🙏</span>
                     </motion.button>
                   </div>
+
+                  {/* Comments with emojis */}
+                  {prayer.reactions.some(reaction => reaction.text.trim()) && (
+                    <div className="mt-3 pt-3 border-t border-border/30">
+                      <div className="space-y-2">
+                        {prayer.reactions
+                          .filter(reaction => reaction.text.trim())
+                          .map((reaction, idx) => (
+                            <div key={`${reaction.emoji}-comment-${idx}`} className="flex items-start gap-2 text-sm">
+                              <span className="text-lg">{reaction.emoji}</span>
+                              <span className="text-muted-foreground italic">"{reaction.text}"</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Reaction picker */}
                   <AnimatePresence>
