@@ -411,16 +411,13 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl h-[80vh] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-2xl h-[100vh] md:h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Heart className="w-6 h-6 text-primary fill-primary/20" />
-            Gebetsfluss
-          </DialogTitle>
           <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              Teile dein Gebetsanliegen oder bete für andere Geschwister.
-            </p>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Heart className="w-6 h-6 text-primary fill-primary/20" />
+              Gebetsfluss
+            </DialogTitle>
             <div className="flex items-center gap-2">
               {currentUser ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50">
@@ -461,6 +458,9 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               )}
             </div>
           </div>
+          <p className="text-muted-foreground text-sm">
+            Teile dein Gebetsanliegen oder bete für andere Geschwister.
+          </p>
         </DialogHeader>
 
         {/* Scheduled Prayer Call */}
@@ -888,8 +888,8 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
 
       {/* Signup Modal */}
       <Dialog open={showSignup} onOpenChange={setShowSignup}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <User className="w-5 h-5" />
               {isLoginMode ? "Einloggen" : "Anmeldung für Gebetsfluss"}
@@ -903,7 +903,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </DialogHeader>
 
           {/* Mode Toggle */}
-          <div className="flex rounded-lg bg-muted p-1">
+          <div className="flex-shrink-0 flex rounded-lg bg-muted p-1">
             <button
               onClick={() => {
                 setIsLoginMode(false);
@@ -928,7 +928,8 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="space-y-4 pb-4">
             {isLoginMode ? (
               // Login Form
               <>
@@ -949,58 +950,6 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                     value={loginData.password}
                     onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                   />
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSignup(false)}
-                    className="flex-1"
-                  >
-                    Abbrechen
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (!loginData.username.trim() || !loginData.password.trim()) {
-                        toast({
-                          title: "Bitte fülle alle Felder aus",
-                          description: "Benutzername und Passwort sind erforderlich.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-
-                      // Mock login - in real app this would verify credentials
-                      // For now, just create a user with default settings
-                      setCurrentUser({
-                        username: loginData.username.trim(),
-                        name: loginData.username.trim(), // Use username as display name for now
-                        email: undefined, // In real app, this would come from DB
-                        phone: undefined,
-                        color: "#3b82f6",
-                        avatar: "🙏",
-                        password: loginData.password,
-                        notifications: true,
-                      });
-
-                      setLoginData({ username: "", password: "" });
-
-                      toast({
-                        title: "Willkommen zurück!",
-                        description: "Du bist wieder im Gebetsfluss angemeldet.",
-                      });
-
-                      setShowSignup(false);
-
-                      // Now submit the prayer that triggered login
-                      if (newPrayerText.trim()) {
-                        handleSubmitPrayer();
-                      }
-                    }}
-                    className="flex-1 bg-gradient-warm text-white"
-                  >
-                    Einloggen
-                  </Button>
                 </div>
               </>
             ) : (
@@ -1101,77 +1050,117 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                     ))}
                   </div>
                 </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSignup(false)}
-                    className="flex-1"
-                  >
-                    Abbrechen
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      if (!signupData.username.trim() || !signupData.password.trim()) {
-                        toast({
-                          title: "Bitte fülle alle erforderlichen Felder aus",
-                          description: "Benutzername und Passwort sind erforderlich.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-
-                      // Check if user provided phone number for verification
-                      const hasPhoneNumber = signupData.phone.trim();
-
-                      // Mock signup - in real app this would send activation link
-                      setCurrentUser({
-                        username: signupData.username.trim(),
-                        name: signupData.name.trim() || signupData.username.trim(), // Use username as fallback for display name
-                        email: signupData.email.trim() || undefined,
-                        phone: signupData.phone.trim() || undefined,
-                        color: signupData.color,
-                        avatar: signupData.avatar,
-                        password: signupData.password, // In real app, this would be hashed
-                        notifications: signupData.notifications,
-                        verified: false, // Will be set to true after verification
-                      });
-
-                      setSignupData({ username: "", name: "", email: "", phone: "", password: "", color: "#3b82f6", avatar: "🙏", notifications: false });
-
-                      if (hasPhoneNumber) {
-                        // Show verification modal for users who provided phone
-                        setShowSignup(false);
-                        setShowVerification(true);
-                      } else {
-                        // Skip verification for users without phone
-                        toast({
-                          title: "Willkommen!",
-                          description: "Du bist jetzt im Gebetsfluss angemeldet.",
-                        });
-                        setShowSignup(false);
-
-                        // Now submit the prayer that triggered signup
-                        if (newPrayerText.trim()) {
-                          handleSubmitPrayer();
-                        }
-                      }
-                    }}
-                    className="flex-1 bg-gradient-warm text-white"
-                  >
-                    Anmelden
-                  </Button>
-                </div>
               </>
             )}
+            </div>
+          </div>
+
+          {/* Action Buttons - Always visible */}
+          <div className="flex-shrink-0 flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowSignup(false)}
+              className="flex-1"
+            >
+              Abbrechen
+            </Button>
+            <Button
+              onClick={() => {
+                if (isLoginMode) {
+                  if (!loginData.username.trim() || !loginData.password.trim()) {
+                    toast({
+                      title: "Bitte fülle alle Felder aus",
+                      description: "Benutzername und Passwort sind erforderlich.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
+                  // Mock login - in real app this would verify credentials
+                  // For now, just create a user with default settings
+                  setCurrentUser({
+                    username: loginData.username.trim(),
+                    name: loginData.username.trim(), // Use username as display name for now
+                    email: undefined, // In real app, this would come from DB
+                    phone: undefined,
+                    color: "#3b82f6",
+                    avatar: "🙏",
+                    password: loginData.password,
+                    notifications: true,
+                  });
+
+                  setLoginData({ username: "", password: "" });
+
+                  toast({
+                    title: "Willkommen zurück!",
+                    description: "Du bist wieder im Gebetsfluss angemeldet.",
+                  });
+
+                  setShowSignup(false);
+
+                  // Now submit the prayer that triggered login
+                  if (newPrayerText.trim()) {
+                    handleSubmitPrayer();
+                  }
+                } else {
+                  if (!signupData.username.trim() || !signupData.password.trim()) {
+                    toast({
+                      title: "Bitte fülle alle erforderlichen Felder aus",
+                      description: "Benutzername und Passwort sind erforderlich.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+
+                  // Check if user provided phone number for verification
+                  const hasPhoneNumber = signupData.phone.trim();
+
+                  // Mock signup - in real app this would send activation link
+                  setCurrentUser({
+                    username: signupData.username.trim(),
+                    name: signupData.name.trim() || signupData.username.trim(), // Use username as fallback for display name
+                    email: signupData.email.trim() || undefined,
+                    phone: signupData.phone.trim() || undefined,
+                    color: signupData.color,
+                    avatar: signupData.avatar,
+                    password: signupData.password, // In real app, this would be hashed
+                    notifications: signupData.notifications,
+                    verified: false, // Will be set to true after verification
+                  });
+
+                  setSignupData({ username: "", name: "", email: "", phone: "", password: "", color: "#3b82f6", avatar: "🙏", notifications: false });
+
+                  if (hasPhoneNumber) {
+                    // Show verification modal for users who provided phone
+                    setShowSignup(false);
+                    setShowVerification(true);
+                  } else {
+                    // Skip verification for users without phone
+                    toast({
+                      title: "Willkommen!",
+                      description: "Du bist jetzt im Gebetsfluss angemeldet.",
+                    });
+                    setShowSignup(false);
+
+                    // Now submit the prayer that triggered signup
+                    if (newPrayerText.trim()) {
+                      handleSubmitPrayer();
+                    }
+                  }
+                }
+              }}
+              className="flex-1 bg-gradient-warm text-white"
+            >
+              {isLoginMode ? "Einloggen" : "Anmelden"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Verification Modal */}
       <Dialog open={showVerification} onOpenChange={setShowVerification}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-green-500" />
               Verifizierung
@@ -1181,7 +1170,8 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
             </p>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="space-y-4 pb-4">
             <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-sm">
                 <strong>Empfänger:</strong> {currentUser?.phone}
@@ -1191,45 +1181,48 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowVerification(false);
-                  toast({
-                    title: "Willkommen!",
-                    description: "Du bist jetzt im Gebetsfluss angemeldet.",
-                  });
-                  // Now submit the prayer that triggered signup
-                  if (newPrayerText.trim()) {
-                    handleSubmitPrayer();
-                  }
-                }}
-                className="flex-1"
-              >
-                Überspringen
-              </Button>
-              <Button
-                onClick={() => {
-                  // Mock verification - in real app this would verify the user
-                  if (currentUser) {
-                    setCurrentUser(prev => prev ? { ...prev, verified: true } : null);
-                  }
-                  setShowVerification(false);
-                  toast({
-                    title: "Verifiziert! ✅",
-                    description: "Dein Konto wurde erfolgreich verifiziert.",
-                  });
-                  // Now submit the prayer that triggered signup
-                  if (newPrayerText.trim()) {
-                    handleSubmitPrayer();
-                  }
-                }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                Link geklickt
-              </Button>
             </div>
+          </div>
+
+          {/* Verification Action Buttons - Always visible */}
+          <div className="flex-shrink-0 flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowVerification(false);
+                toast({
+                  title: "Willkommen!",
+                  description: "Du bist jetzt im Gebetsfluss angemeldet.",
+                });
+                // Now submit the prayer that triggered signup
+                if (newPrayerText.trim()) {
+                  handleSubmitPrayer();
+                }
+              }}
+              className="flex-1"
+            >
+              Überspringen
+            </Button>
+            <Button
+              onClick={() => {
+                // Mock verification - in real app this would verify the user
+                if (currentUser) {
+                  setCurrentUser(prev => prev ? { ...prev, verified: true } : null);
+                }
+                setShowVerification(false);
+                toast({
+                  title: "Verifiziert! ✅",
+                  description: "Dein Konto wurde erfolgreich verifiziert.",
+                });
+                // Now submit the prayer that triggered signup
+                if (newPrayerText.trim()) {
+                  handleSubmitPrayer();
+                }
+              }}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              Link geklickt
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
