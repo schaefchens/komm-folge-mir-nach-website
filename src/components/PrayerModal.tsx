@@ -9,129 +9,19 @@ import { Heart, Send, X, User, LogOut, Search, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { Checkbox } from "@/components/ui/checkbox";
+import { apiClient, Prayer, ScheduledCall } from "@/lib/api";
 
-// Mock prayer data
-const mockPrayers = [
-  {
-    id: "1",
-    name: "Maria",
-    text: "Bitte betet für meine Familie, dass wir in dieser schweren Zeit zusammenhalten und Gottes Führung spüren können.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30),
-    reactions: [
-      { emoji: "🙏", count: 12, comments: [{ emoji: "🙏", text: "Wir beten mit dir", name: "Anna", color: "#10b981", creatorUsername: "anna_user" }], userReactions: ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9", "user10", "user11", "user12"] },
-      { emoji: "❤️", count: 8, comments: [], userReactions: ["user13", "user14", "user15", "user16", "user17", "user18", "user19", "user20"] },
-      { emoji: "✝️", count: 3, comments: [{ emoji: "✝️", text: "Der Herr ist mit euch", name: "Peter", color: "#ef4444", creatorUsername: "peter_user" }], userReactions: ["user21", "user22", "user23"] },
-    ],
-    creatorUsername: "maria_user",
-  },
-  {
-    id: "2",
-    name: "Johannes",
-    text: "Danke für eure Gebete! Meine Operation ist gut verlaufen. Gott ist treu!",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    reactions: [
-      { emoji: "🎉", count: 24, comments: [{ emoji: "🎉", text: "Halleluja!", name: "Lisa", color: "#f59e0b", creatorUsername: "lisa_user" }], userReactions: ["user24", "user25", "user26", "user27", "user28", "user29", "user30", "user31", "user32", "user33", "user34", "user35", "user36", "user37", "user38", "user39", "user40", "user41", "user42", "user43", "user44", "user45", "user46", "user47"] },
-      { emoji: "🙏", count: 15, comments: [], userReactions: ["user48", "user49", "user50", "user51", "user52", "user53", "user54", "user55", "user56", "user57", "user58", "user59", "user60", "user61", "user62"] },
-      { emoji: "❤️", count: 9, comments: [{ emoji: "❤️", text: "So wunderbar", name: "Thomas", color: "#8b5cf6", creatorUsername: "thomas_user" }], userReactions: ["user63", "user64", "user65", "user66", "user67", "user68", "user69", "user70", "user71"] },
-    ],
-    creatorUsername: "johannes_user",
-  },
-  {
-    id: "3",
-    name: "Ruth",
-    text: "Betet bitte für meinen Sohn, der seinen Glaubensweg sucht. Möge der Heilige Geist sein Herz berühren.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    reactions: [
-      { emoji: "🙏", count: 18, comments: [], userReactions: ["user72", "user73", "user74", "user75", "user76", "user77", "user78", "user79", "user80", "user81", "user82", "user83", "user84", "user85", "user86", "user87", "user88", "user89"] },
-      { emoji: "🕊️", count: 7, comments: [{ emoji: "🕊️", text: "Der Geist wirkt", name: "Michael", color: "#ec4899", creatorUsername: "michael_user" }], userReactions: ["user90", "user91", "user92", "user93", "user94", "user95", "user96"] },
-    ],
-    creatorUsername: "ruth_user",
-  },
-  {
-    id: "4",
-    name: "David",
-    text: "Ich bin dankbar für diese Gemeinschaft. Betet für unsere Gemeinde, dass wir weiter wachsen und Menschen erreichen können.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-    reactions: [
-      { emoji: "❤️", count: 31, comments: [], userReactions: ["user97", "user98", "user99", "user100", "user101", "user102", "user103", "user104", "user105", "user106", "user107", "user108", "user109", "user110", "user111", "user112", "user113", "user114", "user115", "user116", "user117", "user118", "user119", "user120", "user121", "user122", "user123", "user124", "user125", "user126", "user127"] },
-      { emoji: "🙏", count: 22, comments: [{ emoji: "🙏", text: "Amen!", name: "Sarah", color: "#06b6d4", creatorUsername: "sarah_user" }], userReactions: ["user128", "user129", "user130", "user131", "user132", "user133", "user134", "user135", "user136", "user137", "user138", "user139", "user140", "user141", "user142", "user143", "user144", "user145", "user146", "user147", "user148", "user149"] },
-      { emoji: "🌟", count: 11, comments: [], userReactions: ["user150", "user151", "user152", "user153", "user154", "user155", "user156", "user157", "user158", "user159", "user160"] },
-    ],
-    creatorUsername: "david_user",
-  },
-  {
-    id: "5",
-    name: "Sarah",
-    text: "Bitte betet für Frieden in der Welt und für alle, die unter Krieg und Verfolgung leiden.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    reactions: [
-      { emoji: "🙏", count: 45, comments: [], userReactions: ["user161", "user162", "user163", "user164", "user165", "user166", "user167", "user168", "user169", "user170", "user171", "user172", "user173", "user174", "user175", "user176", "user177", "user178", "user179", "user180", "user181", "user182", "user183", "user184", "user185", "user186", "user187", "user188", "user189", "user190", "user191", "user192", "user193", "user194", "user195", "user196", "user197", "user198", "user199", "user200", "user201", "user202", "user203", "user204", "user205"] },
-      { emoji: "🕊️", count: 28, comments: [{ emoji: "🕊️", text: "Friede sei mit euch", name: "Johannes", color: "#84cc16", creatorUsername: "johannes_user" }], userReactions: ["user206", "user207", "user208", "user209", "user210", "user211", "user212", "user213", "user214", "user215", "user216", "user217", "user218", "user219", "user220", "user221", "user222", "user223", "user224", "user225", "user226", "user227", "user228", "user229", "user230", "user231", "user232", "user233"] },
-      { emoji: "❤️", count: 19, comments: [], userReactions: ["user234", "user235", "user236", "user237", "user238", "user239", "user240", "user241", "user242", "user243", "user244", "user245", "user246", "user247", "user248", "user249", "user250", "user251", "user252"] },
-    ],
-    creatorUsername: "sarah_user",
-  },
-];
-
-// Mock scheduled prayer calls
-const getMockScheduledPrayerCall = () => {
-  const now = new Date();
-  const random = Math.random();
-
-  // 40% chance of imminent/started call (within target range)
-  if (random < 0.4) {
-    // 50% chance of already started, 50% chance of starting within 15 minutes
-    if (Math.random() < 0.5) {
-      // Already started (within last 30 minutes to 2 hours ago)
-      return new Date(now.getTime() - (Math.random() * 90 + 30) * 60 * 1000);
-    } else {
-      // Starting within 15 minutes
-      return new Date(now.getTime() + Math.random() * 15 * 60 * 1000);
-    }
-  }
-  // 30% chance of no upcoming call
-  else if (random < 0.7) {
-    return null;
-  }
-  // 30% chance of future calls (beyond 15 minutes)
-  else {
-    const futureOptions = [
-      new Date(now.getTime() + (15 + Math.random() * 45) * 60 * 1000), // 15-60 minutes from now
-      new Date(now.getTime() + Math.random() * 24 * 60 * 60 * 1000), // Within next day
-      new Date(now.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000), // Within next week
-    ];
-    return futureOptions[Math.floor(Math.random() * futureOptions.length)];
-  }
-};
+interface User {
+  id: string;
+  username: string;
+  display_name: string;
+  color: string;
+  avatar: string;
+  verified: boolean;
+  notifications?: boolean;
+}
 
 const availableEmojis = ["🙏", "❤️", "🕊️", "✝️", "🎉", "🌟", "💪", "🤗", "❓", "💬"];
-
-interface IndividualReaction {
-  emoji: string;
-  text: string;
-  name: string;
-  color?: string;
-  creatorUsername: string;
-}
-
-interface Reaction {
-  emoji: string;
-  count: number;
-  comments: IndividualReaction[];
-  userReactions: string[]; // Array of usernames who reacted with this emoji
-}
-
-interface Prayer {
-  id: string;
-  name: string;
-  text: string;
-  createdAt: Date;
-  reactions: Reaction[];
-  userColor?: string;
-  userAvatar?: string;
-  verified?: boolean;
-  creatorUsername?: string;
-}
 
 interface PrayerModalProps {
   open: boolean;
@@ -151,22 +41,13 @@ const formatTimeAgo = (date: Date): string => {
 };
 
 const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
-  const [prayers, setPrayers] = useState<Prayer[]>(mockPrayers);
+  const [prayers, setPrayers] = useState<Prayer[]>([]);
+  const [loading, setLoading] = useState(false);
   const [newPrayerText, setNewPrayerText] = useState("");
   const [activeReactionPrayerId, setActiveReactionPrayerId] = useState<string | null>(null);
   const [reactionText, setReactionText] = useState("");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<{
-    username: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    color: string;
-    avatar: string;
-    password?: string;
-    notifications?: boolean;
-    verified?: boolean;
-  } | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showSignup, setShowSignup] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [signupData, setSignupData] = useState({
@@ -187,53 +68,81 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [prayerFilter, setPrayerFilter] = useState<'all' | 'own' | 'unanswered' | 'unseen' | 'seen'>('all');
   const [hashtagSearch, setHashtagSearch] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
-  const [scheduledCall, setScheduledCall] = useState<Date | null>(getMockScheduledPrayerCall());
+  const [scheduledCall, setScheduledCall] = useState<ScheduledCall | null>(null);
   const [countdown, setCountdown] = useState<string>('');
   const [hideScheduledCall, setHideScheduledCall] = useState(false);
   const { toast } = useToast();
 
+  // Load prayers and scheduled call when modal opens
+  useEffect(() => {
+    if (open) {
+      loadPrayers();
+      loadScheduledCall();
+    }
+  }, [open, prayerFilter, hashtagSearch]);
+
   // Check if scheduled call should be clickable (within 15 minutes or started)
   const isScheduledCallClickable = () => {
-    if (!scheduledCall) return false;
-    const now = new Date();
-    const diffMs = scheduledCall.getTime() - now.getTime();
-    return diffMs <= 15 * 60 * 1000; // Within 15 minutes
+    return scheduledCall?.is_clickable ?? false;
   };
 
   // Update countdown every second
   useEffect(() => {
+    if (!scheduledCall) return;
+
     const updateCountdown = () => {
-      if (!scheduledCall) return;
-
-      const now = new Date();
-      const diffMs = scheduledCall.getTime() - now.getTime();
-
-      if (diffMs <= 0) {
-        setCountdown('Jetzt live!');
-        return;
-      }
-
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-
-      if (diffDays > 0) {
-        setCountdown(`in ${diffDays} Tag${diffDays > 1 ? 'en' : ''} ${diffHours} Std.`);
-      } else if (diffHours > 0) {
-        setCountdown(`in ${diffHours} Std. ${diffMinutes} Min.`);
-      } else if (diffMinutes > 0) {
-        setCountdown(`in ${diffMinutes} Min. ${diffSeconds} Sek.`);
-      } else {
-        setCountdown(`in ${diffSeconds} Sek.`);
-      }
+      setCountdown(scheduledCall.countdown);
     };
 
     updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    const interval = setInterval(() => {
+      loadScheduledCall(); // Reload to get updated countdown
+    }, 10000); // Update every 10 seconds instead of every second
 
     return () => clearInterval(interval);
   }, [scheduledCall]);
+
+  const loadPrayers = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getPrayers({
+        filter: prayerFilter,
+        hashtag: hashtagSearch,
+        limit: 50
+      });
+
+      // Convert date strings to Date objects and ensure arrays are properly initialized
+      const prayersWithDates = response.prayers.map(prayer => ({
+        ...prayer,
+        createdAt: new Date(prayer.createdAt),
+        reactions: Array.isArray(prayer.reactions) ? prayer.reactions.map(reaction => ({
+          ...reaction,
+          comments: Array.isArray(reaction.comments) ? reaction.comments : [],
+          userReactions: Array.isArray(reaction.userReactions) ? reaction.userReactions : []
+        })) : []
+      }));
+
+      setPrayers(prayersWithDates);
+    } catch (error) {
+      console.error('Failed to load prayers:', error);
+      toast({
+        title: "Fehler beim Laden",
+        description: "Gebete konnten nicht geladen werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadScheduledCall = async () => {
+    try {
+      const response = await apiClient.getScheduledCall();
+      setScheduledCall(response.scheduled_call);
+    } catch (error) {
+      console.error('Failed to load scheduled call:', error);
+    }
+  };
 
   // Extract hashtags from text
   const extractHashtags = (text: string): string[] => {
@@ -242,7 +151,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
     return matches ? [...new Set(matches)] : []; // Remove duplicates
   };
 
-  const handleSubmitPrayer = () => {
+  const handleSubmitPrayer = async () => {
     if (!currentUser) {
       setShowSignup(true);
       return;
@@ -257,27 +166,32 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       return;
     }
 
-    const newPrayer: Prayer = {
-      id: Date.now().toString(),
-      name: currentUser.name,
-      text: newPrayerText.trim(),
-      createdAt: new Date(),
-      reactions: [],
-      userColor: currentUser.color,
-      userAvatar: currentUser.avatar,
-      verified: currentUser.verified || false,
-      creatorUsername: currentUser.username,
-    };
+    try {
+      const response = await apiClient.createPrayer(newPrayerText.trim());
 
-    setPrayers([newPrayer, ...prayers]);
-    setNewPrayerText("");
-    toast({
-      title: "Gebet geteilt",
-      description: "Dein Gebetsanliegen wurde mit der Gemeinschaft geteilt.",
-    });
+      // Convert date string to Date object
+      const prayerWithDate = {
+        ...response.prayer,
+        createdAt: new Date(response.prayer.createdAt)
+      };
+
+      setPrayers([prayerWithDate, ...prayers]);
+      setNewPrayerText("");
+      toast({
+        title: "Gebet geteilt",
+        description: "Dein Gebetsanliegen wurde mit der Gemeinschaft geteilt.",
+      });
+    } catch (error) {
+      console.error('Failed to submit prayer:', error);
+      toast({
+        title: "Fehler beim Teilen",
+        description: "Dein Gebetsanliegen konnte nicht geteilt werden.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleReaction = (prayerId: string, emoji: string, text: string) => {
+  const handleReaction = async (prayerId: string, emoji: string, text: string) => {
     if (!currentUser) {
       toast({
         title: "Anmeldung erforderlich",
@@ -287,126 +201,55 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       return;
     }
 
-    setPrayers((prev) =>
-      prev.map((prayer) => {
-        if (prayer.id !== prayerId) return prayer;
+    try {
+      const response = await apiClient.addReaction(prayerId, emoji, text.trim());
+      // Update the prayer's reactions in state
+      setPrayers(prev => prev.map(prayer =>
+        prayer.id === prayerId
+          ? { ...prayer, reactions: response.reactions }
+          : prayer
+      ));
 
-        const existingReactionIdx = prayer.reactions.findIndex((r) => r.emoji === emoji);
-        if (existingReactionIdx >= 0) {
-          const updatedReactions = [...prayer.reactions];
-          const existingReaction = updatedReactions[existingReactionIdx];
-
-          // Check if current user already reacted with this emoji
-          const userAlreadyReacted = existingReaction.userReactions.includes(currentUser!.username);
-
-          if (text.trim()) {
-            // Add to comments array (comments don't count as regular reactions)
-            updatedReactions[existingReactionIdx] = {
-              ...existingReaction,
-              count: existingReaction.count + 1,
-              comments: [...existingReaction.comments, {
-                emoji,
-                text: text.trim(),
-                name: currentUser!.name,
-                color: currentUser!.color,
-                creatorUsername: currentUser!.username
-              }],
-            };
-          } else if (userAlreadyReacted) {
-            // User is removing their reaction - remove from userReactions and decrement count
-            const newUserReactions = existingReaction.userReactions.filter(username => username !== currentUser!.username);
-            const newCount = existingReaction.count - 1;
-
-            if (newCount <= 0) {
-              // Remove the entire reaction if no reactions left
-              updatedReactions.splice(existingReactionIdx, 1);
-            } else {
-              updatedReactions[existingReactionIdx] = {
-                ...existingReaction,
-                count: newCount,
-                userReactions: newUserReactions,
-              };
-            }
-          } else {
-            // User is adding a new reaction
-            updatedReactions[existingReactionIdx] = {
-              ...existingReaction,
-              count: existingReaction.count + 1,
-              userReactions: [...existingReaction.userReactions, currentUser!.username],
-            };
-          }
-
-          return { ...prayer, reactions: updatedReactions };
-        } else {
-          // New reaction
-          if (text.trim()) {
-            return {
-              ...prayer,
-              reactions: [...prayer.reactions, {
-                emoji,
-                count: 1,
-                comments: [{
-                  emoji,
-                  text: text.trim(),
-                  name: currentUser!.name,
-                  color: currentUser!.color,
-                  creatorUsername: currentUser!.username
-                }],
-                userReactions: [],
-              }],
-            };
-          } else {
-            return {
-              ...prayer,
-              reactions: [...prayer.reactions, {
-                emoji,
-                count: 1,
-                comments: [],
-                userReactions: [currentUser!.username]
-              }],
-            };
-          }
-        }
-      })
-    );
+      toast({
+        title: text.trim() ? "Kommentar hinzugefügt" : "Reaktion hinzugefügt",
+        description: text.trim() ? "Dein Kommentar wurde hinzugefügt." : "Deine Reaktion wurde hinzugefügt.",
+      });
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+      toast({
+        title: "Fehler",
+        description: "Reaktion konnte nicht hinzugefügt werden.",
+        variant: "destructive",
+      });
+    }
 
     setActiveReactionPrayerId(null);
     setSelectedEmoji(null);
     setReactionText("");
   };
 
-  const handleRemoveComment = (prayerId: string, emoji: string, commentIndex: number) => {
-    setPrayers((prev) =>
-      prev.map((prayer) => {
-        if (prayer.id !== prayerId) return prayer;
+  const handleRemoveComment = async (prayerId: string, emoji: string, commentIndex: number) => {
+    try {
+      const response = await apiClient.removeComment(prayerId, emoji, commentIndex);
+      // Update the prayer's reactions in state
+      setPrayers(prev => prev.map(prayer =>
+        prayer.id === prayerId
+          ? { ...prayer, reactions: response.reactions }
+          : prayer
+      ));
 
-        const reactionIdx = prayer.reactions.findIndex((r) => r.emoji === emoji);
-        if (reactionIdx >= 0) {
-          const updatedReactions = [...prayer.reactions];
-          const reaction = updatedReactions[reactionIdx];
-          const updatedComments = [...reaction.comments];
-          updatedComments.splice(commentIndex, 1);
-
-          // Update count: count = comments.length + (count - old comments.length)
-          const oldCommentCount = reaction.comments.length;
-          const newCount = updatedComments.length + (reaction.count - oldCommentCount);
-
-          if (newCount <= 0) {
-            // Remove the entire reaction if no reactions left
-            updatedReactions.splice(reactionIdx, 1);
-          } else {
-            updatedReactions[reactionIdx] = {
-              ...reaction,
-              count: newCount,
-              comments: updatedComments,
-            };
-          }
-
-          return { ...prayer, reactions: updatedReactions };
-        }
-        return prayer;
-      })
-    );
+      toast({
+        title: "Kommentar entfernt",
+        description: "Der Kommentar wurde erfolgreich entfernt.",
+      });
+    } catch (error) {
+      console.error('Failed to remove comment:', error);
+      toast({
+        title: "Fehler",
+        description: "Kommentar konnte nicht entfernt werden.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -427,7 +270,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                   >
                     {currentUser.avatar}
                   </div>
-                  <span className="text-sm font-medium">{currentUser.name}</span>
+                  <span className="text-sm font-medium">{currentUser.display_name || currentUser.username}</span>
                   {currentUser.verified && (
                     <span className="ml-1 text-green-500" title="Verifiziert">
                       ✓
@@ -436,7 +279,20 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setCurrentUser(null)}
+                    onClick={async () => {
+                      try {
+                        await apiClient.logout();
+                        setCurrentUser(null);
+                        toast({
+                          title: "Abgemeldet",
+                          description: "Du wurdest erfolgreich abgemeldet.",
+                        });
+                      } catch (error) {
+                        console.error('Logout failed:', error);
+                        // Still clear local state even if API call fails
+                        setCurrentUser(null);
+                      }
+                    }}
                     className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
                   >
                     <LogOut className="w-3 h-3" />
@@ -486,7 +342,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                     isScheduledCallClickable() ? 'w-5 h-5 text-white' : 'w-4 h-4 text-blue-600'
                   }`} />
                   <span>
-                    Gemeinsames Gebet: {scheduledCall.toLocaleDateString('de-DE', {
+                    Gemeinsames Gebet: {new Date(scheduledCall.scheduled_at).toLocaleDateString('de-DE', {
                       weekday: 'long',
                       day: 'numeric',
                       month: 'long',
@@ -544,8 +400,8 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               {[
                 { key: 'all', label: 'Alle', count: prayers.length },
                 { key: 'unanswered', label: 'Unbeantwortete', count: prayers.filter(p => p.reactions.length === 0).length },
-                { key: 'unseen', label: 'Ungesehene', count: prayers.filter(p => !p.reactions.some(r => r.userReactions.includes(currentUser.username))).length },
-                { key: 'seen', label: 'Gesehene', count: prayers.filter(p => p.reactions.some(r => r.userReactions.includes(currentUser.username))).length },
+                { key: 'unseen', label: 'Ungesehene', count: prayers.filter(p => !p.reactions.some(r => r.userReactions && r.userReactions.includes(currentUser.username))).length },
+                { key: 'seen', label: 'Gesehene', count: prayers.filter(p => p.reactions.some(r => r.userReactions && r.userReactions.includes(currentUser.username))).length },
                 { key: 'own', label: 'Eigene', count: prayers.filter(p => p.creatorUsername === currentUser.username).length }
               ].map(({ key, label, count }) => (
                 <button
@@ -614,10 +470,10 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                       passesFilter = prayer.reactions.length === 0;
                       break;
                     case 'unseen':
-                      passesFilter = !prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      passesFilter = !prayer.reactions.some(r => r.userReactions && r.userReactions.includes(currentUser.username));
                       break;
                     case 'seen':
-                      passesFilter = prayer.reactions.some(r => r.userReactions.includes(currentUser.username));
+                      passesFilter = prayer.reactions.some(r => r.userReactions && r.userReactions.includes(currentUser.username));
                       break;
                     default:
                       passesFilter = true;
@@ -763,12 +619,12 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                   </div>
 
                   {/* Comments with emojis */}
-                  {prayer.reactions.some(reaction => reaction.comments.length > 0) && (
+                  {prayer.reactions.some(reaction => reaction.comments && reaction.comments.length > 0) && (
                     <div className="mt-3 pt-3 border-t border-border/30">
                       <div className="space-y-2">
                         {prayer.reactions
                           .flatMap((reaction, reactionIdx) =>
-                            reaction.comments.map((comment, commentIdx) => ({
+                            (reaction.comments || []).map((comment, commentIdx) => ({
                               comment,
                               reactionIdx,
                               commentIdx,
@@ -1065,7 +921,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               Abbrechen
             </Button>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (isLoginMode) {
                   if (!loginData.username.trim() || !loginData.password.trim()) {
                     toast({
@@ -1076,31 +932,45 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                     return;
                   }
 
-                  // Mock login - in real app this would verify credentials
-                  // For now, just create a user with default settings
-                  setCurrentUser({
-                    username: loginData.username.trim(),
-                    name: loginData.username.trim(), // Use username as display name for now
-                    email: undefined, // In real app, this would come from DB
-                    phone: undefined,
-                    color: "#3b82f6",
-                    avatar: "🙏",
-                    password: loginData.password,
-                    notifications: true,
-                  });
+                  // Real login via API
+                  try {
+                    const response = await apiClient.login({
+                      username: loginData.username.trim(),
+                      password: loginData.password,
+                    });
 
-                  setLoginData({ username: "", password: "" });
+                    apiClient.setSessionToken(response.session_token);
 
-                  toast({
-                    title: "Willkommen zurück!",
-                    description: "Du bist wieder im Gebetsfluss angemeldet.",
-                  });
+                    setCurrentUser({
+                      id: response.user.id,
+                      username: response.user.username,
+                      display_name: response.user.display_name,
+                      color: response.user.color,
+                      avatar: response.user.avatar,
+                      verified: response.user.verified,
+                      notifications: response.user.notifications,
+                    });
 
-                  setShowSignup(false);
+                    setLoginData({ username: "", password: "" });
 
-                  // Now submit the prayer that triggered login
-                  if (newPrayerText.trim()) {
-                    handleSubmitPrayer();
+                    toast({
+                      title: "Willkommen zurück!",
+                      description: "Du bist wieder im Gebetsfluss angemeldet.",
+                    });
+
+                    setShowSignup(false);
+
+                    // Now submit the prayer that triggered login
+                    if (newPrayerText.trim()) {
+                      handleSubmitPrayer();
+                    }
+                  } catch (error) {
+                    console.error('Login failed:', error);
+                    toast({
+                      title: "Anmeldung fehlgeschlagen",
+                      description: "Bitte überprüfe deine Daten und versuche es erneut.",
+                      variant: "destructive",
+                    });
                   }
                 } else {
                   if (!signupData.username.trim() || !signupData.password.trim()) {
@@ -1115,37 +985,57 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                   // Check if user provided phone number for verification
                   const hasPhoneNumber = signupData.phone.trim();
 
-                  // Mock signup - in real app this would send activation link
-                  setCurrentUser({
-                    username: signupData.username.trim(),
-                    name: signupData.name.trim() || signupData.username.trim(), // Use username as fallback for display name
-                    email: signupData.email.trim() || undefined,
-                    phone: signupData.phone.trim() || undefined,
-                    color: signupData.color,
-                    avatar: signupData.avatar,
-                    password: signupData.password, // In real app, this would be hashed
-                    notifications: signupData.notifications,
-                    verified: false, // Will be set to true after verification
-                  });
-
-                  setSignupData({ username: "", name: "", email: "", phone: "", password: "", color: "#3b82f6", avatar: "🙏", notifications: false });
-
-                  if (hasPhoneNumber) {
-                    // Show verification modal for users who provided phone
-                    setShowSignup(false);
-                    setShowVerification(true);
-                  } else {
-                    // Skip verification for users without phone
-                    toast({
-                      title: "Willkommen!",
-                      description: "Du bist jetzt im Gebetsfluss angemeldet.",
+                  // Real signup via API
+                  try {
+                    const response = await apiClient.register({
+                      username: signupData.username.trim(),
+                      name: signupData.name.trim(),
+                      email: signupData.email.trim(),
+                      phone: signupData.phone.trim(),
+                      password: signupData.password,
+                      color: signupData.color,
+                      avatar: signupData.avatar,
+                      notifications: signupData.notifications,
                     });
-                    setShowSignup(false);
 
-                    // Now submit the prayer that triggered signup
-                    if (newPrayerText.trim()) {
-                      handleSubmitPrayer();
+                    apiClient.setSessionToken(response.session_token);
+
+                    setCurrentUser({
+                      id: response.user.id,
+                      username: response.user.username,
+                      display_name: response.user.display_name,
+                      color: response.user.color,
+                      avatar: response.user.avatar,
+                      verified: response.user.verified,
+                      notifications: response.user.notifications,
+                    });
+
+                    setSignupData({ username: "", name: "", email: "", phone: "", password: "", color: "#3b82f6", avatar: "🙏", notifications: false });
+
+                    if (response.requires_verification) {
+                      // Show verification modal for users who provided phone
+                      setShowSignup(false);
+                      setShowVerification(true);
+                    } else {
+                      // Skip verification for users without phone
+                      toast({
+                        title: "Willkommen!",
+                        description: "Du bist jetzt im Gebetsfluss angemeldet.",
+                      });
+                      setShowSignup(false);
+
+                      // Now submit the prayer that triggered signup
+                      if (newPrayerText.trim()) {
+                        handleSubmitPrayer();
+                      }
                     }
+                  } catch (error) {
+                    console.error('Signup failed:', error);
+                    toast({
+                      title: "Registrierung fehlgeschlagen",
+                      description: "Bitte versuche es erneut.",
+                      variant: "destructive",
+                    });
                   }
                 }
               }}
@@ -1204,19 +1094,28 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               Überspringen
             </Button>
             <Button
-              onClick={() => {
-                // Mock verification - in real app this would verify the user
-                if (currentUser) {
-                  setCurrentUser(prev => prev ? { ...prev, verified: true } : null);
-                }
-                setShowVerification(false);
-                toast({
-                  title: "Verifiziert! ✅",
-                  description: "Dein Konto wurde erfolgreich verifiziert.",
-                });
-                // Now submit the prayer that triggered signup
-                if (newPrayerText.trim()) {
-                  handleSubmitPrayer();
+              onClick={async () => {
+                try {
+                  await apiClient.verifyCode('mock-token'); // In real implementation, get token from SMS
+                  if (currentUser) {
+                    setCurrentUser(prev => prev ? { ...prev, verified: true } : null);
+                  }
+                  setShowVerification(false);
+                  toast({
+                    title: "Verifiziert! ✅",
+                    description: "Dein Konto wurde erfolgreich verifiziert.",
+                  });
+                  // Now submit the prayer that triggered signup
+                  if (newPrayerText.trim()) {
+                    handleSubmitPrayer();
+                  }
+                } catch (error) {
+                  console.error('Verification failed:', error);
+                  toast({
+                    title: "Verifizierung fehlgeschlagen",
+                    description: "Bitte versuche es erneut.",
+                    variant: "destructive",
+                  });
                 }
               }}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
