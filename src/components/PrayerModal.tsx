@@ -375,9 +375,11 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               )}
             </div>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Teile dein Gebetsanliegen oder bete für andere Geschwister.
-          </p>
+          {!currentUser && (
+            <p className="text-muted-foreground text-sm">
+              Teile dein Gebetsanliegen oder bete für andere Geschwister.
+            </p>
+          )}
         </DialogHeader>
 
         {/* Scheduled Prayer Call */}
