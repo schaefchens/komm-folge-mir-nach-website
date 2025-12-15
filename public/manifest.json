@@ -1,0 +1,27 @@
+{
+  "name": "Komm, Folge Mir Nach!",
+  "short_name": "Gebetsfluss",
+  "description": "Gebetsfluss – Gebetsanliegen teilen, reagieren und gemeinsam beten.",
+  "start_url": "/?prayer=1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+        "src": "/favicon.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+    },
+    {
+        "src": "/favicon.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+    }
+  ],
+  "prefer_related_applications": false
+}
+
