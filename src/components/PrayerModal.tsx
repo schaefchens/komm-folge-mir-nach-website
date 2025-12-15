@@ -75,6 +75,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [countdown, setCountdown] = useState<string>('');
   const [hideScheduledCall, setHideScheduledCall] = useState(false);
   const [showPlayer, setShowPlayer] = useState(true);
+  const [playerLoaded, setPlayerLoaded] = useState(false);
   const { toast } = useToast();
 
   // Restore session from localStorage on mount
@@ -329,7 +330,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                 size="sm"
                 onClick={() => setShowPlayer((prev) => !prev)}
                 className="h-8 w-8 p-0"
-                title={showPlayer ? "Player ausblenden" : "Player anzeigen"}
+                title={showPlayer ? "Player ausblenden (läuft weiter)" : "Player anzeigen"}
               >
                 <Music2 className="w-4 h-4" />
               </Button>
@@ -453,12 +454,26 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
         )}
 
         {/* Background music (YouTube) */}
-        {showPlayer && (
-          <div className="px-1 pb-2">
-            <div className="relative overflow-hidden rounded-lg border border-border bg-muted/40">
+        <div
+          className={`px-1 pb-2 transition-all duration-200 ${showPlayer ? '' : 'h-0 opacity-0 pointer-events-none -mb-2'}`}
+          aria-hidden={!showPlayer}
+        >
+          <div className="relative overflow-hidden rounded-lg border border-border bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white" style={{ height: showPlayer ? 160 : 0 }}>
+            {!playerLoaded ? (
+              <div className="h-full w-full flex items-center justify-center px-3">
+                <Button
+                  size="sm"
+                  onClick={() => setPlayerLoaded(true)}
+                  className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  <Music2 className="w-4 h-4" />
+                  Musik Ambiente abspielen
+                </Button>
+              </div>
+            ) : (
               <iframe
-                className="w-full"
-                style={{ height: 80 }}
+                className="w-full transition-[height] duration-200"
+                style={{ height: showPlayer ? 160 : 0 }}
                 src="https://www.youtube.com/embed/Vi_u7mg7dyo?si=cJcaIPVsbBJzLtMX"
                 title="YouTube music player"
                 frameBorder="0"
@@ -467,9 +482,9 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                 allowFullScreen
                 loading="lazy"
               ></iframe>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Prayer Filter */}
         {currentUser && (
