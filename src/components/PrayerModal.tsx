@@ -442,6 +442,23 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
           </div>
         )}
 
+        {/* Background music (YouTube) */}
+        <div className="px-1 pb-2">
+          <div className="relative overflow-hidden rounded-lg border border-border bg-muted/40">
+            <iframe
+              className="w-full"
+              style={{ height: 80 }}
+              src="https://www.youtube.com/embed/Vi_u7mg7dyo?si=cJcaIPVsbBJzLtMX"
+              title="YouTube music player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+
         {/* Prayer Filter */}
         {currentUser && (
           <div className="border-b border-border pb-3">
