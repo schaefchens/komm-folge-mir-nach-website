@@ -66,6 +66,7 @@ CREATE TABLE kfmn.scheduled_calls (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(255) NOT NULL DEFAULT 'Gemeinsames Gebet',
     description TEXT,
+    meeting_url TEXT,
     scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
     duration_minutes INTEGER NOT NULL DEFAULT 60,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,

@@ -47,6 +47,7 @@ export interface ScheduledCall {
   scheduled_at: string;
   duration_minutes: number;
   creator_name: string;
+  url?: string | null;
   is_clickable: boolean;
   countdown: string;
 }

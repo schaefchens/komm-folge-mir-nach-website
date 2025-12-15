@@ -89,6 +89,18 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
     return scheduledCall?.is_clickable ?? false;
   };
 
+  const handleJoinScheduledCall = () => {
+    if (!isScheduledCallClickable()) return;
+    if (scheduledCall?.url) {
+      window.open(scheduledCall.url, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "Kein Link verfügbar",
+        description: "Der Link zum Gebetsraum wurde noch nicht hinterlegt.",
+      });
+    }
+  };
+
   // Update countdown every second
   useEffect(() => {
     if (!scheduledCall) return;
@@ -333,13 +345,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                       ? 'cursor-pointer text-white bg-gradient-to-r from-red-500 via-orange-500 to-red-600 dark:from-red-600 dark:via-orange-600 dark:to-red-700 border-red-400 dark:border-red-500 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 font-semibold text-base'
                       : 'text-sm text-muted-foreground bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-100/50 dark:hover:bg-blue-950/30'
                   }`}
-                  onClick={isScheduledCallClickable() ? () => {
-                    // Handle joining the live prayer call
-                    toast({
-                      title: "Verbindung zum Gebetsraum",
-                      description: "Du wirst zum gemeinsamen Gebetsraum weitergeleitet...",
-                    });
-                  } : undefined}
+                  onClick={isScheduledCallClickable() ? handleJoinScheduledCall : undefined}
                 >
                   <Video className={`${
                     isScheduledCallClickable() ? 'w-5 h-5 text-white' : 'w-4 h-4 text-blue-600'

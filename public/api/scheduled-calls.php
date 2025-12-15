@@ -27,6 +27,7 @@ function handleScheduledCallsGet() {
             sc.description,
             sc.scheduled_at,
             sc.duration_minutes,
+            sc.meeting_url,
             sc.created_by,
             u.username as creator_username,
             u.display_name as creator_name
@@ -75,6 +76,7 @@ function handleScheduledCallsGet() {
             'title' => $call['title'],
             'scheduled_at' => $call['scheduled_at'],
             'duration_minutes' => $call['duration_minutes'],
+            'url' => $call['meeting_url'],
             'creator_name' => $call['creator_name'] ?: $call['creator_username'],
             'is_clickable' => $isClickable,
             'countdown' => $countdown
@@ -96,6 +98,12 @@ function handleScheduledCallsPost() {
     $description = sanitizeInput($input['description'] ?? '');
     $scheduledAt = $input['scheduled_at'];
     $duration = (int)($input['duration_minutes'] ?? 60);
+    $meetingUrl = sanitizeInput($input['url'] ?? '');
+
+    // Basic URL validation if provided
+    if ($meetingUrl && !filter_var($meetingUrl, FILTER_VALIDATE_URL)) {
+        sendError('Invalid meeting URL');
+    }
 
     // Validate scheduled time is in the future
     $scheduledTime = strtotime($scheduledAt);
@@ -110,14 +118,14 @@ function handleScheduledCallsPost() {
 
     // Create scheduled call
     $stmt = $db->prepare("
-        INSERT INTO kfmn.scheduled_calls (title, description, scheduled_at, duration_minutes, created_by)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO kfmn.scheduled_calls (title, description, meeting_url, scheduled_at, duration_minutes, created_by)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$title, $description, $scheduledAt, $duration, $user['id']]);
+    $stmt->execute([$title, $description, $meetingUrl ?: null, $scheduledAt, $duration, $user['id']]);
 
     // Get the inserted record
     $stmt = $db->prepare("
-        SELECT id, title, description, scheduled_at, duration_minutes
+        SELECT id, title, description, meeting_url, scheduled_at, duration_minutes
         FROM kfmn.scheduled_calls
         WHERE title = ? AND scheduled_at = ? AND created_by = ?
         ORDER BY id DESC LIMIT 1
