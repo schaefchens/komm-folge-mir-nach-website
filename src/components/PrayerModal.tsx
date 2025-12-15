@@ -76,6 +76,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [hideScheduledCall, setHideScheduledCall] = useState(false);
   const [showPlayer, setShowPlayer] = useState(true);
   const [playerLoaded, setPlayerLoaded] = useState(false);
+  const [playerTogglePing, setPlayerTogglePing] = useState(false);
   const { toast } = useToast();
 
   // Restore session from localStorage on mount
@@ -325,15 +326,20 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               Gebetsfluss
             </DialogTitle>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPlayer((prev) => !prev)}
-                className="h-8 w-8 p-0"
-                title={showPlayer ? "Player ausblenden (läuft weiter)" : "Player anzeigen"}
-              >
-                <Music2 className="w-4 h-4" />
-              </Button>
+              <div className="relative">
+                {playerTogglePing && (
+                  <span className="absolute inset-0 rounded-full animate-ping bg-primary/40"></span>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPlayer((prev) => !prev)}
+                  className="h-8 w-8 p-0 relative"
+                  title={showPlayer ? "Player ausblenden (läuft weiter)" : "Player anzeigen"}
+                >
+                  <Music2 className="w-4 h-4" />
+                </Button>
+              </div>
               {currentUser ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50">
                   <div
@@ -463,7 +469,11 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               <div className="h-full w-full flex items-center justify-center px-3">
                 <Button
                   size="sm"
-                  onClick={() => setPlayerLoaded(true)}
+                  onClick={() => {
+                    setPlayerLoaded(true);
+                    setPlayerTogglePing(true);
+                    setTimeout(() => setPlayerTogglePing(false), 800);
+                  }}
                   className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2"
                 >
                   <Music2 className="w-4 h-4" />
