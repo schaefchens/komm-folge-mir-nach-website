@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, Send, X, User, LogOut, Search, Video } from "lucide-react";
+import { Heart, Send, X, User, LogOut, Search, Video, Music2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -74,6 +74,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [scheduledCall, setScheduledCall] = useState<ScheduledCall | null>(null);
   const [countdown, setCountdown] = useState<string>('');
   const [hideScheduledCall, setHideScheduledCall] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(true);
   const { toast } = useToast();
 
   // Restore session from localStorage on mount
@@ -323,6 +324,15 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               Gebetsfluss
             </DialogTitle>
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPlayer((prev) => !prev)}
+                className="h-8 w-8 p-0"
+                title={showPlayer ? "Player ausblenden" : "Player anzeigen"}
+              >
+                <Music2 className="w-4 h-4" />
+              </Button>
               {currentUser ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50">
                   <div
@@ -443,21 +453,23 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
         )}
 
         {/* Background music (YouTube) */}
-        <div className="px-1 pb-2">
-          <div className="relative overflow-hidden rounded-lg border border-border bg-muted/40">
-            <iframe
-              className="w-full"
-              style={{ height: 80 }}
-              src="https://www.youtube.com/embed/Vi_u7mg7dyo?si=cJcaIPVsbBJzLtMX"
-              title="YouTube music player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              loading="lazy"
-            ></iframe>
+        {showPlayer && (
+          <div className="px-1 pb-2">
+            <div className="relative overflow-hidden rounded-lg border border-border bg-muted/40">
+              <iframe
+                className="w-full"
+                style={{ height: 80 }}
+                src="https://www.youtube.com/embed/Vi_u7mg7dyo?si=cJcaIPVsbBJzLtMX"
+                title="YouTube music player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Prayer Filter */}
         {currentUser && (
