@@ -6,6 +6,9 @@ require_once 'includes/functions.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
+    case 'GET':
+        handleAuthGet();
+        break;
     case 'POST':
         handleAuthPost();
         break;
@@ -36,6 +39,29 @@ function handleAuthPost() {
         default:
             sendError('Unknown action');
     }
+}
+
+function handleAuthGet() {
+    // Return current session user if token valid
+    $user = requireAuth();
+
+    // Normalize keys to match frontend expectations
+    $normalizedUser = [
+        'id' => $user['id'],
+        'username' => $user['username'],
+        'display_name' => $user['display_name'] ?? $user['username'],
+        'color' => $user['user_color'] ?? '#3b82f6',
+        'avatar' => $user['user_avatar'] ?? '🙏',
+        'verified' => (bool)($user['is_verified'] ?? false),
+        'notifications' => (bool)($user['notifications_enabled'] ?? false),
+        'email' => $user['email'] ?? null,
+        'phone' => $user['phone'] ?? null,
+    ];
+
+    sendJsonResponse([
+        'success' => true,
+        'user' => $normalizedUser,
+    ]);
 }
 
 function handleRegister($data) {

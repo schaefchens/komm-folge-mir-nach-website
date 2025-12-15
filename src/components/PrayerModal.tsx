@@ -76,6 +76,48 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [hideScheduledCall, setHideScheduledCall] = useState(false);
   const { toast } = useToast();
 
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const restoreSession = async () => {
+      const existingToken = apiClient.getSessionToken();
+      if (!existingToken) return;
+      try {
+        const response = await apiClient.currentUser();
+        setCurrentUser({
+          id: response.user.id,
+          username: response.user.username,
+          display_name: response.user.display_name,
+          color: response.user.color,
+          avatar: response.user.avatar,
+          verified: response.user.verified,
+          notifications: response.user.notifications,
+          phone: response.user.phone,
+          email: response.user.email,
+        });
+      } catch (err) {
+        console.warn('Session restore failed, clearing token', err);
+        apiClient.setSessionToken(null);
+        setCurrentUser(null);
+      }
+    };
+    restoreSession();
+  }, []);
+
+  const handleAuthError = (error: any) => {
+    const message = error instanceof Error ? error.message : '';
+    const isAuthError = message.includes('Authentication required') || message.includes('Invalid or expired session');
+    if (isAuthError) {
+      apiClient.setSessionToken(null);
+      setCurrentUser(null);
+      setShowSignup(true);
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Bitte melde dich erneut an.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Load prayers and scheduled call when modal opens
   useEffect(() => {
     if (open) {
@@ -140,6 +182,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       setPrayers(prayersWithDates);
     } catch (error) {
       console.error('Failed to load prayers:', error);
+      handleAuthError(error);
       toast({
         title: "Fehler beim Laden",
         description: "Gebete konnten nicht geladen werden.",
@@ -198,6 +241,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       });
     } catch (error) {
       console.error('Failed to submit prayer:', error);
+      handleAuthError(error);
       toast({
         title: "Fehler beim Teilen",
         description: "Dein Gebetsanliegen konnte nicht geteilt werden.",
@@ -231,6 +275,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       });
     } catch (error) {
       console.error('Failed to add reaction:', error);
+      handleAuthError(error);
       toast({
         title: "Fehler",
         description: "Reaktion konnte nicht hinzugefügt werden.",
@@ -259,6 +304,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       });
     } catch (error) {
       console.error('Failed to remove comment:', error);
+      handleAuthError(error);
       toast({
         title: "Fehler",
         description: "Kommentar konnte nicht entfernt werden.",

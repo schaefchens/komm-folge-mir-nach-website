@@ -111,6 +111,10 @@ class ApiClient {
     const data = await response.json();
 
     if (!response.ok) {
+      // Clear session if unauthorized
+      if (response.status === 401) {
+        this.setSessionToken(null);
+      }
       throw new Error(data.error || 'API request failed');
     }
 
@@ -145,6 +149,10 @@ class ApiClient {
     const result = await this.request('/auth', { method: 'DELETE' });
     this.setSessionToken(null);
     return result;
+  }
+
+  async currentUser(): Promise<{ success: boolean; user: User }> {
+    return this.request('/auth', { method: 'GET' });
   }
 
   // Prayers
