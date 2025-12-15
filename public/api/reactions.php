@@ -251,7 +251,9 @@ function getReactionComments($prayerId, $emoji) {
     ");
     $stmt->execute([$prayerId, $emoji]);
 
-    return $stmt->fetchAll();
+    return array_map(function($comment) use ($emoji) {
+        return array_merge($comment, ['emoji' => $emoji]);
+    }, $stmt->fetchAll());
 }
 
 function getUserReactions($prayerId, $emoji) {

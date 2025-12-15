@@ -10,13 +10,15 @@ export interface User {
   avatar: string;
   verified: boolean;
   notifications?: boolean;
+  phone?: string;
+  email?: string;
 }
 
 export interface Prayer {
   id: string;
   name: string;
   text: string;
-  createdAt: string;
+  createdAt: string | Date;
   reactions: Reaction[];
   userColor?: string;
   userAvatar?: string;

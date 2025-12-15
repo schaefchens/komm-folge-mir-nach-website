@@ -19,6 +19,8 @@ interface User {
   avatar: string;
   verified: boolean;
   notifications?: boolean;
+  phone?: string;
+  email?: string;
 }
 
 const availableEmojis = ["🙏", "❤️", "🕊️", "✝️", "🎉", "🌟", "💪", "🤗", "❓", "💬"];
@@ -28,7 +30,8 @@ interface PrayerModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const formatTimeAgo = (date: Date): string => {
+const formatTimeAgo = (dateInput: Date | string): string => {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -595,7 +598,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleReaction(prayer.id, reaction.emoji, "")}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted hover:bg-muted/80 transition-colors text-sm"
-                        title={reaction.text || undefined}
+                        title={`${reaction.count} Reaktionen`}
                       >
                         <span>{reaction.emoji}</span>
                         <span className="text-muted-foreground">{reaction.count}</span>
@@ -639,7 +642,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
 
                             return (
                               <div key={`${comment.emoji}-comment-${idx}`} className="flex items-start gap-2 text-sm group">
-                                <span className="text-lg">{comment.emoji}</span>
+                                <span className="text-lg">{comment.emoji || reactionEmoji}</span>
                                 <div className="flex-1">
                                   <span className="text-muted-foreground italic">"{comment.text}"</span>
                                   <span
@@ -763,7 +766,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
             <button
               onClick={() => {
                 setIsLoginMode(false);
-                setLoginData({ email: "", phone: "", password: "" });
+                setLoginData({ username: "", password: "" });
               }}
               className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 !isLoginMode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"

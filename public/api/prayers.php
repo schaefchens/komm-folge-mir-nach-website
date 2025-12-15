@@ -142,12 +142,9 @@ function handlePrayersGet() {
     $prayers = $stmt->fetchAll();
 
     // Format prayers for frontend compatibility
-    $formattedPrayers = array_map(function($prayer) {
-        $reactions = json_decode($prayer['reactions'], true);
-        // Ensure reactions is always an array
-        if (!is_array($reactions)) {
-            $reactions = [];
-        }
+    $formattedPrayers = array_map(function($prayer) use ($currentUser) {
+        // Fetch full reaction data including comments and user reactions
+        $reactions = getReactionData($prayer['id'], $currentUser['id'] ?? null);
 
         return [
             'id' => $prayer['id'],
@@ -166,6 +163,77 @@ function handlePrayersGet() {
         'prayers' => $formattedPrayers,
         'has_more' => count($prayers) === $limit
     ]);
+}
+
+/**
+ * Helpers for loading full reaction data (shared with reactions endpoint behaviour)
+ */
+function getReactionData($prayerId, $userId = null) {
+    global $db;
+
+    $stmt = $db->prepare("
+        SELECT
+            r.id,
+            r.emoji,
+            COUNT(DISTINCT ru.id) as count,
+            COUNT(DISTINCT rc.id) as comment_count,
+            BOOL_OR(ru.user_id = ?::uuid) as user_reacted
+        FROM kfmn.reactions r
+        LEFT JOIN kfmn.reaction_users ru ON r.id = ru.reaction_id
+        LEFT JOIN kfmn.reaction_comments rc ON r.id = rc.reaction_id
+        WHERE r.prayer_id = ?::uuid
+        GROUP BY r.id, r.emoji
+        ORDER BY r.emoji
+    ");
+    $stmt->execute([$userId, $prayerId]);
+
+    $reactions = [];
+    while ($row = $stmt->fetch()) {
+        $reactions[] = [
+            'emoji' => $row['emoji'],
+            'count' => (int)$row['count'],
+            'comments' => getReactionComments($row['id'], $row['emoji']),
+            'userReactions' => getUserReactions($row['id']),
+        ];
+    }
+
+    return $reactions;
+}
+
+function getReactionComments($reactionId, $emoji) {
+    global $db;
+
+    $stmt = $db->prepare("
+        SELECT
+            rc.comment_text as text,
+            u.username as creatorUsername,
+            u.display_name as name,
+            u.user_color as color
+        FROM kfmn.reaction_comments rc
+        JOIN kfmn.users u ON rc.user_id = u.id
+        WHERE rc.reaction_id = ?::uuid
+        ORDER BY rc.created_at ASC
+    ");
+    $stmt->execute([$reactionId]);
+
+    // Attach emoji to each comment for UI display
+    return array_map(function($comment) use ($emoji) {
+        return array_merge($comment, ['emoji' => $emoji]);
+    }, $stmt->fetchAll());
+}
+
+function getUserReactions($reactionId) {
+    global $db;
+
+    $stmt = $db->prepare("
+        SELECT u.username
+        FROM kfmn.reaction_users ru
+        JOIN kfmn.users u ON ru.user_id = u.id
+        WHERE ru.reaction_id = ?::uuid
+    ");
+    $stmt->execute([$reactionId]);
+
+    return array_column($stmt->fetchAll(), 'username');
 }
 
 function handlePrayersPost() {
