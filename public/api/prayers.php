@@ -32,7 +32,7 @@ function handlePrayersGet() {
     $limit = min((int)($_GET['limit'] ?? 50), 100);
     $offset = (int)($_GET['offset'] ?? 0);
 
-    $params = [];
+    $whereParams = [];
     $whereClause = '';
 
     // Build filter conditions
@@ -43,7 +43,7 @@ function handlePrayersGet() {
                 return;
             }
             $whereClause = 'WHERE p.user_id = ?';
-            $params[] = $currentUser['id'];
+            $whereParams[] = $currentUser['id'];
             break;
         case 'unanswered':
             $whereClause = 'WHERE NOT EXISTS (SELECT 1 FROM kfmn.reactions r WHERE r.prayer_id = p.id)';
@@ -58,7 +58,7 @@ function handlePrayersGet() {
                 JOIN kfmn.reaction_users ru ON r.id = ru.reaction_id
                 WHERE r.prayer_id = p.id AND ru.user_id = ?
             )';
-            $params[] = $currentUser['id'];
+            $whereParams[] = $currentUser['id'];
             break;
         case 'seen':
             if (!$currentUser) {
@@ -70,22 +70,21 @@ function handlePrayersGet() {
                 JOIN kfmn.reaction_users ru ON r.id = ru.reaction_id
                 WHERE r.prayer_id = p.id AND ru.user_id = ?
             )';
-            $params[] = $currentUser['id'];
+            $whereParams[] = $currentUser['id'];
             break;
         default: // 'all'
             $whereClause = '';
     }
 
-    // Add hashtag filter
+    // Add hashtag/term filter (accepts with or without #)
     if ($hashtag) {
         $hashtags = explode(' ', trim($hashtag));
         $hashtagConditions = [];
         foreach ($hashtags as $tag) {
-            if (strpos($tag, '#') === 0) {
-                $tag = substr($tag, 1);
-                $hashtagConditions[] = "p.prayer_text ILIKE ?";
-                $params[] = "%#$tag%";
-            }
+            $tag = ltrim($tag, '#');
+            if ($tag === '') continue;
+            $hashtagConditions[] = "p.prayer_text ILIKE ?";
+            $whereParams[] = "%#$tag%";
         }
         if ($hashtagConditions) {
             $hashtagClause = '(' . implode(' AND ', $hashtagConditions) . ')';
@@ -132,8 +131,15 @@ function handlePrayersGet() {
         LIMIT ? OFFSET ?
     ";
 
+    $params = [];
+    // Parameters appear in query order:
+    // 1) user id for outer user_reacted flag
+    // 2) user id for subquery user_reacted flag
     $params[] = $currentUser['id'] ?? null;
     $params[] = $currentUser['id'] ?? null;
+    // 3) where clause parameters (if any)
+    $params = array_merge($params, $whereParams);
+    // 4) limit & offset
     $params[] = $limit;
     $params[] = $offset;
 

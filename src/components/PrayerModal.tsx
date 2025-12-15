@@ -544,7 +544,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
               <div className="border-b border-border pb-3">
                 <div className="relative">
                   <Input
-                    placeholder="Suche nach Hashtags (z.B. #familie #gesundheit) - UND-Verknüpfung"
+                    placeholder="Suche nach Hashtags z.B. #opendoors"
                     value={hashtagSearch}
                     onChange={(e) => setHashtagSearch(e.target.value)}
                     className="text-sm pr-8"
@@ -594,11 +594,11 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
 
                   // Apply hashtag filter (AND logic)
                   if (hashtagSearch.trim()) {
-                    const searchHashtags = hashtagSearch.trim().split(/\s+/).filter(tag => tag.startsWith('#'));
-                    const prayerHashtags = extractHashtags(prayer.text);
+                    const searchTerms = hashtagSearch.trim().split(/\s+/).map(term => term.startsWith('#') ? term.slice(1) : term).filter(Boolean);
+                    const prayerHashtags = extractHashtags(prayer.text).map(tag => tag.replace(/^#/, '').toLowerCase());
 
-                    // All search hashtags must be present in prayer hashtags (AND logic)
-                    const hasAllHashtags = searchHashtags.every(searchTag =>
+                    // All search terms must be present in prayer hashtags (AND logic)
+                    const hasAllHashtags = searchTerms.every(searchTag =>
                       prayerHashtags.some(prayerTag => prayerTag.toLowerCase() === searchTag.toLowerCase())
                     );
 
@@ -681,11 +681,10 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                             className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded-md cursor-pointer hover:bg-primary/20 transition-colors"
                             onClick={() => {
                               setHashtagSearch(prev => {
-                                const currentHashtags = prev.trim().split(/\s+/).filter(tag => tag.startsWith('#'));
-                                const hashtagLower = hashtag.toLowerCase();
-                                const isAlreadyPresent = currentHashtags.some(tag => tag.toLowerCase() === hashtagLower);
-                                if (isAlreadyPresent) return prev;
-                                return prev ? `${prev} ${hashtag}` : hashtag;
+                                const normalized = prev.trim().split(/\s+/).map(t => t.replace(/^#/, '').toLowerCase()).filter(Boolean);
+                                const tagLower = hashtag.replace(/^#/, '').toLowerCase();
+                                if (normalized.includes(tagLower)) return prev;
+                                return prev ? `${prev} ${tagLower}` : tagLower;
                               });
                               setShowSearchBar(true);
                             }}
