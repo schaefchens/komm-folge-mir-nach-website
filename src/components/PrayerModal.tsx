@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, Send, X, User, LogOut, Search, Video, Music2 } from "lucide-react";
+import { Heart, Send, X, User, LogOut, Search, Video, Music2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,6 +77,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
   const [showPlayer, setShowPlayer] = useState(true);
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [playerTogglePing, setPlayerTogglePing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   // Restore session from localStorage on mount
@@ -129,6 +130,15 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
     }
   }, [open, prayerFilter, hashtagSearch]);
 
+  // Periodic refresh for new prayers/reactions while open
+  useEffect(() => {
+    if (!open) return;
+    const id = setInterval(() => {
+      loadPrayers(false); // silent refresh
+    }, 30000); // every 30s
+    return () => clearInterval(id);
+  }, [open, prayerFilter, hashtagSearch]);
+
   // Check if scheduled call should be clickable (within 15 minutes or started)
   const isScheduledCallClickable = () => {
     return scheduledCall?.is_clickable ?? false;
@@ -162,9 +172,10 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
     return () => clearInterval(interval);
   }, [scheduledCall]);
 
-  const loadPrayers = async () => {
+  const loadPrayers = async (showSpinner: boolean = true) => {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
+      else setIsRefreshing(true);
       const response = await apiClient.getPrayers({
         filter: prayerFilter,
         hashtag: hashtagSearch,
@@ -193,6 +204,7 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
       });
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -340,6 +352,16 @@ const PrayerModal = ({ open, onOpenChange }: PrayerModalProps) => {
                   <Music2 className="w-4 h-4" />
                 </Button>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => loadPrayers()}
+                className="h-8 w-8 p-0 relative"
+                title="Aktualisieren"
+                disabled={loading || isRefreshing}
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
               {currentUser ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50">
                   <div
