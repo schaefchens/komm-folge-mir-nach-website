@@ -23,6 +23,9 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
     if (params.get("prayer") === "1") {
       setShowPrayerModal(true);
     }
+    if (params.get("bible") === "1") {
+      setShowBibleModal(true);
+    }
   }, []);
 
   return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
