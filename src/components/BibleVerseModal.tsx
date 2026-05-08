@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -260,6 +260,30 @@ function findBook(name: string): BibleBook | undefined {
   return BIBLE_BOOKS.find(b => normalizeBookName(b.name) === n);
 }
 
+interface BookGroup {
+  label: string;
+  books: string[];
+}
+
+const BOOK_GROUPS: BookGroup[] = [
+  {
+    label: "Altes Testament",
+    books: BIBLE_BOOKS.filter(b => b.scopes.includes("old")).map(b => b.name),
+  },
+  {
+    label: "Neues Testament",
+    books: BIBLE_BOOKS.filter(b => b.scopes.includes("new")).map(b => b.name),
+  },
+  {
+    label: "Psalmen & Weisheitsbücher",
+    books: ["Psalmen", "Sprüche", "Prediger", "Hohelied"],
+  },
+];
+
+function isBookGroup(name: string): boolean {
+  return BOOK_GROUPS.some(g => g.label === name);
+}
+
 function buildChapterList(
   scopeMode: ScopeMode,
   presets: PresetKey[],
@@ -282,6 +306,13 @@ function buildChapterList(
   return selections
     .filter(s => s.book.trim())
     .flatMap(s => {
+      const group = BOOK_GROUPS.find(g => g.label === s.book);
+      if (group) {
+        return group.books.flatMap(bookName => {
+          const b = BIBLE_BOOKS.find(x => x.name === bookName);
+          return b ? add(b) : [];
+        });
+      }
       const match = findBook(s.book);
       if (!match) return [];
       if (s.chapter.trim()) {
@@ -652,15 +683,25 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                               <SelectValue placeholder="Buch wählen…" />
                             </SelectTrigger>
                             <SelectContent>
-                              {BIBLE_BOOKS.map(b => (
-                                <SelectItem key={b.name} value={b.name}>{b.name}</SelectItem>
-                              ))}
+                              <SelectGroup>
+                                <SelectLabel>Buchgruppen</SelectLabel>
+                                {BOOK_GROUPS.map(g => (
+                                  <SelectItem key={g.label} value={g.label}>{g.label}</SelectItem>
+                                ))}
+                              </SelectGroup>
+                              <SelectSeparator />
+                              <SelectGroup>
+                                <SelectLabel>Einzelne Bücher</SelectLabel>
+                                {BIBLE_BOOKS.map(b => (
+                                  <SelectItem key={b.name} value={b.name}>{b.name}</SelectItem>
+                                ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                           <Select
                             value={sel.chapter || "all"}
                             onValueChange={v => updateSelection(sel.id, "chapter", v === "all" ? "" : v)}
-                            disabled={!sel.book}
+                            disabled={!sel.book || isBookGroup(sel.book)}
                           >
                             <SelectTrigger className="w-32">
                               <SelectValue placeholder="Kap." />
