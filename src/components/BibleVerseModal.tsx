@@ -81,6 +81,7 @@ const DEFAULTS = {
   selections: [{ id: "default", book: "", chapter: "" }] as BookSelection[],
   translation: "Elberfelder",
   count: 1,
+  topic: "",
 };
 
 const PRESET_LABELS: Record<PresetKey, string> = {
@@ -237,6 +238,22 @@ function pickRandomVerses(chapters: ChapterInfo[], count: number): VerseRef[] {
   return result;
 }
 
+const PRESET_DESCRIPTION: Record<PresetKey, string> = {
+  old: "dem Alten Testament",
+  new: "dem Neuen Testament",
+  psalms: "dem Buch der Psalmen",
+  proverbs: "dem Buch der Sprüche",
+};
+
+function buildScopeDescription(scopeMode: ScopeMode, presets: PresetKey[], selections: BookSelection[]): string {
+  if (scopeMode === "whole") return "der gesamten Bibel";
+  if (scopeMode === "preset") return presets.map(p => PRESET_DESCRIPTION[p]).join(", ");
+  return selections
+    .filter(s => s.book.trim())
+    .map(s => s.chapter.trim() ? `${s.book} Kapitel ${s.chapter}` : s.book)
+    .join(", ");
+}
+
 const VerseCard = ({ verse: v, translation }: { verse: Verse; translation: string }) => {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -318,15 +335,16 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const [presets, setPresets] = useState<PresetKey[]>(initial?.presets ?? DEFAULTS.presets);
   const [count, setCount] = useState<number>(initial?.count ?? DEFAULTS.count);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) || "");
+  const [topic, setTopic] = useState<string>(initial?.topic ?? DEFAULTS.topic);
   const [loading, setLoading] = useState(false);
   const [verses, setVerses] = useState<Verse[] | null>(null);
 
   useEffect(() => {
     localStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ scopeMode, presets, selections, translation, count }),
+      JSON.stringify({ scopeMode, presets, selections, translation, count, topic }),
     );
-  }, [scopeMode, presets, selections, translation, count]);
+  }, [scopeMode, presets, selections, translation, count, topic]);
 
   const togglePreset = (k: PresetKey) =>
     setPresets(cur => cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k]);
@@ -338,6 +356,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     setScopeMode(DEFAULTS.scopeMode);
     setPresets(DEFAULTS.presets);
     setCount(DEFAULTS.count);
+    setTopic(DEFAULTS.topic);
     toast({ title: "Zurückgesetzt", description: "Standardwerte wiederhergestellt." });
   };
 
@@ -366,10 +385,9 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
       return;
     }
 
-    const refs = pickRandomVerses(chapters, count);
-
-    // No API key — show references only
+    // No API key — show references only (topic mode requires API key, already gated in UI)
     if (!apiKey.trim()) {
+      const refs = pickRandomVerses(chapters, count);
       setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
       return;
     }
@@ -378,8 +396,15 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     setLoading(true);
     setVerses(null);
 
-    const refList = refs.map(r => `${r.book} ${r.chapter},${r.verse}`).join("; ");
-    const prompt = `Gib mir den genauen Bibeltext dieser Verse in der Übersetzung "${translation}": ${refList}. Falls eine Versangabe nicht exakt stimmt, nimm den nächstgelegenen Vers. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+    let prompt: string;
+    if (topic.trim()) {
+      const scope = buildScopeDescription(scopeMode, presets, selections);
+      prompt = `Wähle ${count} Bibelvers${count > 1 ? "e" : ""} aus ${scope}, die inhaltlich gut zum Thema „${topic.trim()}" passen. Verwende die Übersetzung "${translation}". Gib ausschließlich Verse zurück, die wirklich zum Thema passen – lieber weniger als unpassende Verse. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+    } else {
+      const refs = pickRandomVerses(chapters, count);
+      const refList = refs.map(r => `${r.book} ${r.chapter},${r.verse}`).join("; ");
+      prompt = `Gib mir den genauen Bibeltext dieser Verse in der Übersetzung "${translation}": ${refList}. Falls eine Versangabe nicht exakt stimmt, nimm den nächstgelegenen Vers. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+    }
 
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -395,7 +420,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
             { role: "user", content: prompt },
           ],
           response_format: { type: "json_object" },
-          temperature: 0.1,
+          temperature: topic.trim() ? 0.7 : 0.1,
         }),
       });
 
@@ -552,6 +577,24 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                     ))}
                   </RadioGroup>
                 </div>
+
+                {apiKey.trim() && (
+                  <div className="space-y-2">
+                    <Label htmlFor="topic">
+                      Thema{" "}
+                      <span className="text-muted-foreground font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="topic"
+                      placeholder="z.B. Taufe, Glaube, Vergebung …"
+                      value={topic}
+                      onChange={e => setTopic(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Wenn angegeben, wählt ChatGPT nur Verse aus, die inhaltlich zum Thema passen.
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="apikey">
