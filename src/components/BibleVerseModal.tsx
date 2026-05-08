@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,6 +52,29 @@ const TRANSLATIONS = [
 
 const STORAGE_KEY = "openai_api_key";
 const PREFS_KEY = "bible_picker_prefs";
+
+const TRANSLATION_CODES: Record<string, string> = {
+  "Luther": "LUT",
+  "Schlachter": "SLT",
+  "Elberfelder": "ELB",
+  "Neues Leben": "NLB",
+  "Einheitsübersetzung": "EU",
+};
+
+function buildBibleserverUrl(reference: string, translationName: string): string {
+  const code = TRANSLATION_CODES[translationName] ?? "ELB";
+  // reference: "Buch Kapitel,Vers" e.g. "1. Mose 1,1" or "Jeremia 6,1"
+  const commaIdx = reference.indexOf(",");
+  if (commaIdx === -1) return `https://www.bibleserver.com/${code}/${encodeURIComponent(reference)}`;
+  const beforeComma = reference.slice(0, commaIdx); // "1. Mose 1"
+  const verse = reference.slice(commaIdx + 1).trim(); // "1"
+  const lastSpace = beforeComma.lastIndexOf(" ");
+  if (lastSpace === -1) return `https://www.bibleserver.com/${code}/${encodeURIComponent(reference)}`;
+  const book = beforeComma.slice(0, lastSpace); // "1. Mose"
+  const chapter = beforeComma.slice(lastSpace + 1); // "1"
+  // bibleserver expects no space between book name and chapter, e.g. "1.Mose1,1"
+  return `https://www.bibleserver.com/${code}/${encodeURIComponent(book.replace(/\s+/g, "") + chapter + "," + verse)}`;
+}
 
 const DEFAULTS = {
   scopeMode: "whole" as ScopeMode,
@@ -349,6 +373,19 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
           <div className="space-y-6 py-2">
             {!verses && (
               <>
+                <div className="space-y-2">
+                  <Label htmlFor="count">Anzahl Verse</Label>
+                  <Input
+                    id="count"
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={count}
+                    onChange={e => setCount(parseInt(e.target.value) || 1)}
+                    className="w-24"
+                  />
+                </div>
+
                 <div className="space-y-3">
                   <Label>Auswahl</Label>
                   <RadioGroup
@@ -388,30 +425,55 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                 {scopeMode === "custom" && (
                   <div className="space-y-3">
                     <Label>Bücher & Kapitel</Label>
-                    {selections.map(sel => (
-                      <div key={sel.id} className="flex gap-2 items-center">
-                        <Input
-                          placeholder="Buch (z.B. Johannes)"
-                          value={sel.book}
-                          onChange={e => updateSelection(sel.id, "book", e.target.value)}
-                          className="flex-1"
-                        />
-                        <Input
-                          placeholder="Kapitel (optional)"
-                          value={sel.chapter}
-                          onChange={e => updateSelection(sel.id, "chapter", e.target.value)}
-                          className="w-40"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeSelection(sel.id)}
-                          disabled={selections.length === 1}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
+                    {selections.map(sel => {
+                      const matchedBook = BIBLE_BOOKS.find(b => b.name === sel.book);
+                      return (
+                        <div key={sel.id} className="flex gap-2 items-center">
+                          <Select
+                            value={sel.book || "__none__"}
+                            onValueChange={v =>
+                              setSelections(s =>
+                                s.map(x => x.id === sel.id ? { ...x, book: v === "__none__" ? "" : v, chapter: "" } : x)
+                              )
+                            }
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Buch wählen…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {BIBLE_BOOKS.map(b => (
+                                <SelectItem key={b.name} value={b.name}>{b.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={sel.chapter || "all"}
+                            onValueChange={v => updateSelection(sel.id, "chapter", v === "all" ? "" : v)}
+                            disabled={!sel.book}
+                          >
+                            <SelectTrigger className="w-36">
+                              <SelectValue placeholder="Kap." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Alle Kapitel</SelectItem>
+                              {matchedBook && Array.from({ length: matchedBook.v.length }, (_, i) => (
+                                <SelectItem key={i + 1} value={String(i + 1)}>
+                                  Kapitel {i + 1}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeSelection(sel.id)}
+                            disabled={selections.length === 1}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                     <Button variant="outline" size="sm" onClick={addSelection}>
                       <Plus className="w-4 h-4 mr-1" /> Buch hinzufügen
                     </Button>
@@ -432,19 +494,6 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                       </label>
                     ))}
                   </RadioGroup>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="count">Anzahl Verse</Label>
-                  <Input
-                    id="count"
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={count}
-                    onChange={e => setCount(parseInt(e.target.value) || 1)}
-                    className="w-24"
-                  />
                 </div>
 
                 <div className="space-y-2">
@@ -480,7 +529,14 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                         <Hash className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
                       )}
                       <div className="flex-1">
-                        <p className="font-semibold text-foreground">{v.reference}</p>
+                        <a
+                          href={buildBibleserverUrl(v.reference, translation)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-foreground hover:text-primary hover:underline cursor-pointer"
+                        >
+                          {v.reference}
+                        </a>
                         {v.translation && (
                           <p className="text-xs text-muted-foreground">{v.translation}</p>
                         )}
