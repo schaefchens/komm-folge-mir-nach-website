@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -419,7 +418,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Dices className="w-5 h-5" />
@@ -427,7 +426,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-2">
           <div className="space-y-6 py-2">
             {!verses && (
               <>
@@ -584,7 +583,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="flex gap-2 pt-4 border-t">
           {verses ? (
