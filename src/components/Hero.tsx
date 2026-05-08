@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-shepherd.jpg";
 import QuestionnaireModal from "./QuestionnaireModal";
 import PrayerModal from "./PrayerModal";
-import { BookOpen, Heart } from "lucide-react";
+import BibleVerseModal from "./BibleVerseModal";
+import { BookOpen, Heart, Dices } from "lucide-react";
 
 interface HeroProps {
   showJoinButton?: boolean;
@@ -14,6 +15,8 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
   const [showPrayerModal, setShowPrayerModal] = useState(false);
   const [isQuestionnaireButtonExpanded, setIsQuestionnaireButtonExpanded] = useState(false);
   const [isPrayerButtonExpanded, setIsPrayerButtonExpanded] = useState(false);
+  const [showBibleModal, setShowBibleModal] = useState(false);
+  const [isBibleButtonExpanded, setIsBibleButtonExpanded] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -90,6 +93,40 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
       <PrayerModal
         open={showPrayerModal}
         onOpenChange={setShowPrayerModal}
+      />
+
+      {/* Bibelverse Picker Button */}
+      <motion.button
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 1.9, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        onClick={() => {
+          if (!isBibleButtonExpanded) {
+            setIsBibleButtonExpanded(true);
+          } else {
+            setIsBibleButtonExpanded(false);
+            setShowBibleModal(true);
+          }
+        }}
+        className="absolute top-[108px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
+      >
+        <Dices className="w-4 h-4 flex-shrink-0" />
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{
+            opacity: isBibleButtonExpanded ? 1 : 0,
+            width: isBibleButtonExpanded ? 'auto' : 0
+          }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="whitespace-nowrap"
+        >
+          Bibelverse Picker
+        </motion.span>
+      </motion.button>
+
+      <BibleVerseModal
+        open={showBibleModal}
+        onOpenChange={setShowBibleModal}
       />
 
       {/* Decorative Background Elements */}
