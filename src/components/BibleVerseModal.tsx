@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash } from "lucide-react";
+import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BibleVerseModalProps {
@@ -237,6 +237,64 @@ function pickRandomVerses(chapters: ChapterInfo[], count: number): VerseRef[] {
   }
   return result;
 }
+
+const VerseCard = ({ verse: v, translation }: { verse: Verse; translation: string }) => {
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopy = async () => {
+    const text = v.text
+      ? `${v.reference}\n„${v.text}"\n(${v.translation ?? translation})`
+      : v.reference;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Kopieren fehlgeschlagen", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="p-4 rounded-lg border bg-card shadow-sm">
+      <div className="flex items-start gap-2 mb-2">
+        {v.text ? (
+          <BookOpen className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
+        ) : (
+          <Hash className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
+        )}
+        <div className="flex-1">
+          <a
+            href={buildBibleserverUrl(v.reference, translation)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-foreground hover:text-primary hover:underline cursor-pointer"
+          >
+            {v.reference}
+          </a>
+          {v.translation && (
+            <p className="text-xs text-muted-foreground">{v.translation}</p>
+          )}
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={handleCopy} title="Kopieren">
+          {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+        </Button>
+      </div>
+      {v.text ? (
+        <p className="text-foreground leading-relaxed pl-6">„{v.text}"</p>
+      ) : (
+        <a
+          href={buildBibleserverUrl(v.reference, translation)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted-foreground text-sm pl-6 italic hover:text-primary hover:underline block"
+        >
+          Bitte in deiner Bibel nachschlagen →
+        </a>
+      )}
+    </div>
+  );
+};
 
 const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const { toast } = useToast();
@@ -521,35 +579,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                   <p className="text-muted-foreground text-center py-8">Keine Verse gefunden.</p>
                 )}
                 {verses.map((v, i) => (
-                  <div key={i} className="p-4 rounded-lg border bg-card shadow-sm">
-                    <div className="flex items-start gap-2 mb-2">
-                      {v.text ? (
-                        <BookOpen className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
-                      ) : (
-                        <Hash className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
-                      )}
-                      <div className="flex-1">
-                        <a
-                          href={buildBibleserverUrl(v.reference, translation)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-foreground hover:text-primary hover:underline cursor-pointer"
-                        >
-                          {v.reference}
-                        </a>
-                        {v.translation && (
-                          <p className="text-xs text-muted-foreground">{v.translation}</p>
-                        )}
-                      </div>
-                    </div>
-                    {v.text ? (
-                      <p className="text-foreground leading-relaxed pl-6">„{v.text}"</p>
-                    ) : (
-                      <p className="text-muted-foreground text-sm pl-6 italic">
-                        Bitte in deiner Bibel nachschlagen
-                      </p>
-                    )}
-                  </div>
+                  <VerseCard key={i} verse={v} translation={translation} />
                 ))}
               </div>
             )}
