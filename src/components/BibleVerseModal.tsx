@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw, Hash, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -82,6 +83,7 @@ const DEFAULTS = {
   translation: "Elberfelder",
   count: 1,
   topic: "",
+  useOpenAI: false,
 };
 
 const PRESET_LABELS: Record<PresetKey, string> = {
@@ -336,13 +338,14 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const [count, setCount] = useState<number>(initial?.count ?? DEFAULTS.count);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) || "");
   const [topic, setTopic] = useState<string>(initial?.topic ?? DEFAULTS.topic);
+  const [useOpenAI, setUseOpenAI] = useState<boolean>(initial?.useOpenAI ?? DEFAULTS.useOpenAI);
   const [loading, setLoading] = useState(false);
   const [verses, setVerses] = useState<Verse[] | null>(null);
 
   useEffect(() => {
     localStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ scopeMode, presets, selections, translation, count, topic }),
+      JSON.stringify({ scopeMode, presets, selections, translation, count, topic, useOpenAI }),
     );
   }, [scopeMode, presets, selections, translation, count, topic]);
 
@@ -357,6 +360,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     setPresets(DEFAULTS.presets);
     setCount(DEFAULTS.count);
     setTopic(DEFAULTS.topic);
+    setUseOpenAI(DEFAULTS.useOpenAI);
     toast({ title: "Zurückgesetzt", description: "Standardwerte wiederhergestellt." });
   };
 
@@ -385,8 +389,8 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
       return;
     }
 
-    // No API key — show references only (topic mode requires API key, already gated in UI)
-    if (!apiKey.trim()) {
+    // OpenAI disabled or no key — show references only
+    if (!useOpenAI || !apiKey.trim()) {
       const refs = pickRandomVerses(chapters, count);
       setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
       return;
@@ -578,40 +582,47 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                   </RadioGroup>
                 </div>
 
-                {apiKey.trim() && (
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">
-                      Thema{" "}
-                      <span className="text-muted-foreground font-normal">(optional)</span>
-                    </Label>
-                    <Input
-                      id="topic"
-                      placeholder="z.B. Taufe, Glaube, Vergebung …"
-                      value={topic}
-                      onChange={e => setTopic(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Wenn angegeben, wählt ChatGPT nur Verse aus, die inhaltlich zum Thema passen.
-                    </p>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">ChatGPT-Funktionen</p>
+                    <p className="text-xs text-muted-foreground">Verstext & Themensuche via OpenAI</p>
                   </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="apikey">
-                    OpenAI API Key{" "}
-                    <span className="text-muted-foreground font-normal">(optional)</span>
-                  </Label>
-                  <Input
-                    id="apikey"
-                    type="password"
-                    placeholder="sk-… (für Verstext)"
-                    value={apiKey}
-                    onChange={e => setApiKey(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ohne API Key werden nur Stellenangaben angezeigt — den Text kannst du in deiner Bibel nachschlagen. Der Key wird nur lokal gespeichert.
-                  </p>
+                  <Switch checked={useOpenAI} onCheckedChange={setUseOpenAI} />
                 </div>
+
+                {useOpenAI && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="topic">
+                        Thema{" "}
+                        <span className="text-muted-foreground font-normal">(optional)</span>
+                      </Label>
+                      <Input
+                        id="topic"
+                        placeholder="z.B. Taufe, Glaube, Vergebung …"
+                        value={topic}
+                        onChange={e => setTopic(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Wenn angegeben, wählt ChatGPT nur Verse aus, die inhaltlich zum Thema passen.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="apikey">OpenAI API Key</Label>
+                      <Input
+                        id="apikey"
+                        type="password"
+                        placeholder="sk-…"
+                        value={apiKey}
+                        onChange={e => setApiKey(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Wird nur lokal in deinem Browser gespeichert.
+                      </p>
+                    </div>
+                  </>
+                )}
               </>
             )}
 
