@@ -19,6 +19,7 @@ interface BookSelection {
   id: string;
   book: string;
   chapter: string;
+  minVerses: number;
 }
 
 interface Verse {
@@ -292,14 +293,15 @@ function buildChapterList(
     });
 }
 
-function pickRandomVerses(chapters: ChapterInfo[], count: number): VerseRef[] {
-  if (chapters.length === 0) return [];
+function pickFromPool(chapters: ChapterInfo[], count: number, seen: Set<string>): VerseRef[] {
+  if (chapters.length === 0 || count <= 0) return [];
   const totalVerses = chapters.reduce((s, c) => s + c.verseCount, 0);
   const n = Math.min(count, totalVerses);
-  const seen = new Set<string>();
   const result: VerseRef[] = [];
+  let attempts = 0;
 
-  while (result.length < n) {
+  while (result.length < n && attempts < totalVerses * 4) {
+    attempts++;
     const buf = new Uint32Array(1);
     crypto.getRandomValues(buf);
     let idx = buf[0] % totalVerses;
@@ -316,6 +318,28 @@ function pickRandomVerses(chapters: ChapterInfo[], count: number): VerseRef[] {
     }
   }
   return result;
+}
+
+function pickRandomVerses(
+  chapters: ChapterInfo[],
+  count: number,
+  scopeMode: ScopeMode = "whole",
+  selections: BookSelection[] = [],
+): VerseRef[] {
+  const seen = new Set<string>();
+
+  // In custom mode, honour per-selection minimums first
+  if (scopeMode === "custom" && selections.some(s => s.minVerses > 0)) {
+    const guaranteed: VerseRef[] = [];
+    for (const sel of selections.filter(s => s.book.trim() && s.minVerses > 0)) {
+      const selChapters = buildChapterList("custom", [], [sel]);
+      guaranteed.push(...pickFromPool(selChapters, sel.minVerses, seen));
+    }
+    const remaining = Math.max(0, count - guaranteed.length);
+    return [...guaranteed, ...pickFromPool(chapters, remaining, seen)];
+  }
+
+  return pickFromPool(chapters, count, seen);
 }
 
 const PRESET_DESCRIPTION: Record<PresetKey, string> = {
@@ -412,8 +436,8 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const initial = loadPrefs();
   const [selections, setSelections] = useState<BookSelection[]>(
     initial?.selections?.length
-      ? initial.selections.map((s: BookSelection) => ({ ...s, id: crypto.randomUUID() }))
-      : [{ id: crypto.randomUUID(), book: "", chapter: "" }],
+      ? initial.selections.map((s: BookSelection) => ({ minVerses: 0, ...s, id: crypto.randomUUID() }))
+      : [{ id: crypto.randomUUID(), book: "", chapter: "", minVerses: 0 }],
   );
   const [translation, setTranslation] = useState<string>(initial?.translation ?? DEFAULTS.translation);
   const [scopeMode, setScopeMode] = useState<ScopeMode>(initial?.scopeMode ?? DEFAULTS.scopeMode);
@@ -450,10 +474,13 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   };
 
   const addSelection = () =>
-    setSelections(s => [...s, { id: crypto.randomUUID(), book: "", chapter: "" }]);
+    setSelections(s => [...s, { id: crypto.randomUUID(), book: "", chapter: "", minVerses: 0 }]);
 
   const updateSelection = (id: string, field: "book" | "chapter", value: string) =>
     setSelections(s => s.map(sel => sel.id === id ? { ...sel, [field]: value } : sel));
+
+  const updateMinVerses = (id: string, value: number) =>
+    setSelections(s => s.map(sel => sel.id === id ? { ...sel, minVerses: Math.max(0, value) } : sel));
 
   const removeSelection = (id: string) =>
     setSelections(s => s.length > 1 ? s.filter(sel => sel.id !== id) : s);
@@ -475,7 +502,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     }
 
     if (refsOnly) {
-      const refs = pickRandomVerses(chapters, count);
+      const refs = pickRandomVerses(chapters, count, scopeMode, selections);
       setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
       return;
     }
@@ -508,7 +535,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     }
 
     // ── Random mode ───────────────────────────────────────────────────────
-    const refs = pickRandomVerses(chapters, count);
+    const refs = pickRandomVerses(chapters, count, scopeMode, selections);
 
     if (bollsCode) {
       setLoading(true);
@@ -635,7 +662,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                             onValueChange={v => updateSelection(sel.id, "chapter", v === "all" ? "" : v)}
                             disabled={!sel.book}
                           >
-                            <SelectTrigger className="w-36">
+                            <SelectTrigger className="w-32">
                               <SelectValue placeholder="Kap." />
                             </SelectTrigger>
                             <SelectContent>
@@ -647,6 +674,15 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                               ))}
                             </SelectContent>
                           </Select>
+                          <Input
+                            type="number"
+                            min={0}
+                            placeholder="min."
+                            value={sel.minVerses || ""}
+                            onChange={e => updateMinVerses(sel.id, parseInt(e.target.value) || 0)}
+                            className="w-16 text-center"
+                            title="Mindestanzahl Verse aus diesem Buch/Kapitel"
+                          />
                           <Button
                             variant="ghost"
                             size="icon"
