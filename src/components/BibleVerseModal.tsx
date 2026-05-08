@@ -611,43 +611,45 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+        <div className="flex-1 min-h-0 overflow-y-auto pl-1 pr-2">
           <div className="space-y-6 py-2">
             {!verses && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="count">Anzahl Verse</Label>
-                  <Input
-                    id="count"
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={count}
-                    onChange={e => setCount(parseInt(e.target.value) || 1)}
-                    className="w-24"
-                  />
-                </div>
+                <div className="flex gap-6 items-start">
+                  <div className="space-y-3">
+                    <Label>Auswahl</Label>
+                    <RadioGroup
+                      value={scopeMode}
+                      onValueChange={v => setScopeMode(v as ScopeMode)}
+                      className="gap-2"
+                    >
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <RadioGroupItem value="whole" id="scope-whole" />
+                        <span className="text-sm">Ganze Bibel</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <RadioGroupItem value="preset" id="scope-preset" />
+                        <span className="text-sm">Bereich</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <RadioGroupItem value="custom" id="scope-custom" />
+                        <span className="text-sm">Eigene Auswahl</span>
+                      </label>
+                    </RadioGroup>
+                  </div>
 
-                <div className="space-y-3">
-                  <Label>Auswahl</Label>
-                  <RadioGroup
-                    value={scopeMode}
-                    onValueChange={v => setScopeMode(v as ScopeMode)}
-                    className="gap-2"
-                  >
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <RadioGroupItem value="whole" id="scope-whole" />
-                      <span className="text-sm">Ganze Bibel</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <RadioGroupItem value="preset" id="scope-preset" />
-                      <span className="text-sm">Bereich</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <RadioGroupItem value="custom" id="scope-custom" />
-                      <span className="text-sm">Eigene Auswahl</span>
-                    </label>
-                  </RadioGroup>
+                  <div className="space-y-2">
+                    <Label htmlFor="count">Anzahl Verse</Label>
+                    <Input
+                      id="count"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={count}
+                      onChange={e => setCount(parseInt(e.target.value) || 1)}
+                      className="w-24"
+                    />
+                  </div>
                 </div>
 
                 {scopeMode === "preset" && (
