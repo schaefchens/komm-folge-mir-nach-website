@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Trash2, Loader2, Dices, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -35,12 +36,31 @@ const TRANSLATIONS = [
 
 const STORAGE_KEY = "openai_api_key";
 
+type ScopeMode = "whole" | "preset" | "custom";
+type PresetKey = "old" | "new" | "psalms" | "proverbs";
+
+const PRESET_LABELS: Record<PresetKey, string> = {
+  old: "Altes Testament",
+  new: "Neues Testament",
+  psalms: "Psalmen",
+  proverbs: "Sprüche",
+};
+
+const PRESET_DESCRIPTION: Record<PresetKey, string> = {
+  old: "dem Alten Testament",
+  new: "dem Neuen Testament",
+  psalms: "dem Buch der Psalmen",
+  proverbs: "dem Buch der Sprüche",
+};
+
 const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const { toast } = useToast();
   const [selections, setSelections] = useState<BookSelection[]>([
     { id: crypto.randomUUID(), book: "", chapter: "" },
   ]);
-  const [translations, setTranslations] = useState<string[]>(["Luther"]);
+  const [translation, setTranslation] = useState<string>("Luther");
+  const [scopeMode, setScopeMode] = useState<ScopeMode>("whole");
+  const [preset, setPreset] = useState<PresetKey>("new");
   const [count, setCount] = useState(5);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) || "");
   const [loading, setLoading] = useState(false);
@@ -55,35 +75,33 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const removeSelection = (id: string) =>
     setSelections((s) => (s.length > 1 ? s.filter((sel) => sel.id !== id) : s));
 
-  const toggleTranslation = (t: string) =>
-    setTranslations((cur) =>
-      cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]
-    );
-
   const handleSubmit = async () => {
     if (!apiKey.trim()) {
       toast({ title: "API Key fehlt", description: "Bitte gib deinen OpenAI API Key ein.", variant: "destructive" });
       return;
     }
-    const validSelections = selections.filter((s) => s.book.trim());
-    if (validSelections.length === 0) {
-      toast({ title: "Auswahl fehlt", description: "Bitte gib mindestens ein Buch an.", variant: "destructive" });
-      return;
-    }
-    if (translations.length === 0) {
-      toast({ title: "Übersetzung fehlt", description: "Bitte wähle mindestens eine Übersetzung.", variant: "destructive" });
-      return;
+
+    let selectionDescription = "";
+    if (scopeMode === "whole") {
+      selectionDescription = "der ganzen Bibel";
+    } else if (scopeMode === "preset") {
+      selectionDescription = PRESET_DESCRIPTION[preset];
+    } else {
+      const validSelections = selections.filter((s) => s.book.trim());
+      if (validSelections.length === 0) {
+        toast({ title: "Auswahl fehlt", description: "Bitte gib mindestens ein Buch an.", variant: "destructive" });
+        return;
+      }
+      selectionDescription = validSelections
+        .map((s) => (s.chapter.trim() ? `${s.book} Kapitel ${s.chapter}` : `${s.book} (alle Kapitel)`))
+        .join(", ");
     }
 
     localStorage.setItem(STORAGE_KEY, apiKey);
     setLoading(true);
     setVerses(null);
 
-    const selectionDescription = validSelections
-      .map((s) => (s.chapter.trim() ? `${s.book} Kapitel ${s.chapter}` : `${s.book} (alle Kapitel)`))
-      .join(", ");
-
-    const prompt = `Wähle ${count} zufällige Bibelverse aus folgenden Quellen: ${selectionDescription}. Verwende abwechselnd diese Übersetzungen: ${translations.join(", ")}. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+    const prompt = `Wähle ${count} zufällige Bibelverse aus ${selectionDescription}. Verwende die Übersetzung: ${translation}. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
 
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -135,6 +153,48 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
             {!verses && (
               <>
                 <div className="space-y-3">
+                  <Label>Auswahl</Label>
+                  <RadioGroup
+                    value={scopeMode}
+                    onValueChange={(v) => setScopeMode(v as ScopeMode)}
+                    className="gap-2"
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="whole" id="scope-whole" />
+                      <span className="text-sm">Ganze Bibel</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="preset" id="scope-preset" />
+                      <span className="text-sm">Bereich</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <RadioGroupItem value="custom" id="scope-custom" />
+                      <span className="text-sm">Eigene Auswahl</span>
+                    </label>
+                  </RadioGroup>
+                </div>
+
+                {scopeMode === "preset" && (
+                  <div className="space-y-2">
+                    <Label>Bereich wählen</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(Object.keys(PRESET_LABELS) as PresetKey[]).map((k) => (
+                        <label key={k} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="preset"
+                            checked={preset === k}
+                            onChange={() => setPreset(k)}
+                          />
+                          <span className="text-sm">{PRESET_LABELS[k]}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {scopeMode === "custom" && (
+                <div className="space-y-3">
                   <Label>Bücher & Kapitel</Label>
                   {selections.map((sel) => (
                     <div key={sel.id} className="flex gap-2 items-center">
@@ -164,20 +224,22 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                     <Plus className="w-4 h-4 mr-1" /> Buch hinzufügen
                   </Button>
                 </div>
+                )}
 
                 <div className="space-y-3">
-                  <Label>Übersetzungen</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label>Übersetzung</Label>
+                  <RadioGroup
+                    value={translation}
+                    onValueChange={setTranslation}
+                    className="grid grid-cols-2 gap-2"
+                  >
                     {TRANSLATIONS.map((t) => (
                       <label key={t} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={translations.includes(t)}
-                          onCheckedChange={() => toggleTranslation(t)}
-                        />
+                        <RadioGroupItem value={t} id={`tr-${t}`} />
                         <span className="text-sm">{t}</span>
                       </label>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
