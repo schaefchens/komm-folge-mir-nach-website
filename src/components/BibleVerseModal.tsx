@@ -25,6 +25,7 @@ interface Verse {
   reference: string;
   text?: string;
   translation?: string;
+  fromAI?: boolean;
 }
 
 interface VerseRef {
@@ -43,22 +44,36 @@ type ScopeMode = "whole" | "preset" | "custom";
 type PresetKey = "old" | "new" | "psalms" | "proverbs";
 
 const TRANSLATIONS = [
-  "Luther",
-  "Schlachter",
-  "Elberfelder",
+  "Luther 1912",
+  "Schlachter 2000",
+  "Elberfelder 1871",
   "Neues Leben",
   "Einheitsübersetzung",
+  "Hoffnung für Alle 2015",
+  "Menge",
 ];
 
 const STORAGE_KEY = "openai_api_key";
 const PREFS_KEY = "bible_picker_prefs";
 
+// bibleserver.com URL codes
 const TRANSLATION_CODES: Record<string, string> = {
-  "Luther": "LUT",
-  "Schlachter": "SLT",
-  "Elberfelder": "ELB",
+  "Luther 1912": "LUT",
+  "Schlachter 2000": "SLT",
+  "Elberfelder 1871": "ELB",
   "Neues Leben": "NLB",
   "Einheitsübersetzung": "EU",
+  "Hoffnung für Alle 2015": "HFA",
+  "Menge": "MEN",
+};
+
+// bolls.life API codes — only translations supported by bolls
+const BOLLS_CODES: Record<string, string> = {
+  "Luther 1912": "LUT",
+  "Schlachter 2000": "S00",
+  "Elberfelder 1871": "ELB",
+  "Hoffnung für Alle 2015": "HFA",
+  "Menge": "MB",
 };
 
 function buildBibleserverUrl(reference: string, translationName: string): string {
@@ -76,14 +91,77 @@ function buildBibleserverUrl(reference: string, translationName: string): string
   return `https://www.bibleserver.com/${code}/${encodeURIComponent(book.replace(/\s+/g, "") + chapter + "," + verse)}`;
 }
 
+function getBookNumber(bookName: string): number {
+  return BIBLE_BOOKS.findIndex(b => b.name === bookName) + 1;
+}
+
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]*>/g, "").trim();
+}
+
+function parseVerseRef(reference: string): VerseRef | null {
+  const commaIdx = reference.indexOf(",");
+  if (commaIdx === -1) return null;
+  const verse = parseInt(reference.slice(commaIdx + 1).trim());
+  const beforeComma = reference.slice(0, commaIdx).trim();
+  const lastSpace = beforeComma.lastIndexOf(" ");
+  if (lastSpace === -1) return null;
+  const book = beforeComma.slice(0, lastSpace).trim();
+  const chapter = parseInt(beforeComma.slice(lastSpace + 1));
+  if (!book || isNaN(chapter) || isNaN(verse)) return null;
+  return { book, chapter, verse };
+}
+
+async function fetchFromBolls(refs: VerseRef[], bollsCode: string, translationName: string): Promise<Verse[]> {
+  return Promise.all(
+    refs.map(async (ref) => {
+      const bookNum = getBookNumber(ref.book);
+      const refStr = `${ref.book} ${ref.chapter},${ref.verse}`;
+      if (bookNum === 0) return { reference: refStr };
+      try {
+        const res = await fetch(
+          `https://bolls.life/get-verse/${bollsCode}/${bookNum}/${ref.chapter}/${ref.verse}/`
+        );
+        if (!res.ok) return { reference: refStr };
+        const data = await res.json();
+        const text = stripHtml(data.text ?? "");
+        return { reference: refStr, text: text || undefined, translation: translationName };
+      } catch {
+        return { reference: refStr };
+      }
+    })
+  );
+}
+
+async function callChatGPT(prompt: string, apiKey: string, temperature: number): Promise<Verse[]> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Du bist ein Bibel-Experte. Antworte immer mit gültigem JSON." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature,
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI Fehler: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  const parsed = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+  return (parsed.verses as Verse[]) || [];
+}
+
 const DEFAULTS = {
   scopeMode: "whole" as ScopeMode,
   presets: ["new"] as PresetKey[],
   selections: [{ id: "default", book: "", chapter: "" }] as BookSelection[],
-  translation: "Elberfelder",
+  translation: "Elberfelder 1871",
   count: 1,
   topic: "",
   useOpenAI: false,
+  refsOnly: false,
 };
 
 const PRESET_LABELS: Record<PresetKey, string> = {
@@ -290,16 +368,21 @@ const VerseCard = ({ verse: v, translation }: { verse: Verse; translation: strin
           >
             {v.reference}
           </a>
-          {v.translation && (
-            <p className="text-xs text-muted-foreground">{v.translation}</p>
-          )}
+          <p className="text-xs text-muted-foreground">{v.translation ?? translation}</p>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={handleCopy} title="Kopieren">
           {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
         </Button>
       </div>
       {v.text ? (
-        <p className="text-foreground leading-relaxed pl-6">„{v.text}"</p>
+        <>
+          <p className="text-foreground leading-relaxed pl-6">„{v.text}"</p>
+          {v.fromAI && (
+            <p className="text-xs text-amber-500 pl-6 mt-1 italic">
+              Text von ChatGPT — möglicherweise nicht wortgetreu
+            </p>
+          )}
+        </>
       ) : (
         <a
           href={buildBibleserverUrl(v.reference, translation)}
@@ -338,6 +421,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const [count, setCount] = useState<number>(initial?.count ?? DEFAULTS.count);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) || "");
   const [topic, setTopic] = useState<string>(initial?.topic ?? DEFAULTS.topic);
+  const [refsOnly, setRefsOnly] = useState<boolean>(initial?.refsOnly ?? DEFAULTS.refsOnly);
   const [useOpenAI, setUseOpenAI] = useState<boolean>(initial?.useOpenAI ?? DEFAULTS.useOpenAI);
   const [loading, setLoading] = useState(false);
   const [verses, setVerses] = useState<Verse[] | null>(null);
@@ -345,7 +429,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   useEffect(() => {
     localStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ scopeMode, presets, selections, translation, count, topic, useOpenAI }),
+      JSON.stringify({ scopeMode, presets, selections, translation, count, topic, useOpenAI, refsOnly }),
     );
   }, [scopeMode, presets, selections, translation, count, topic]);
 
@@ -360,6 +444,7 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     setPresets(DEFAULTS.presets);
     setCount(DEFAULTS.count);
     setTopic(DEFAULTS.topic);
+    setRefsOnly(DEFAULTS.refsOnly);
     setUseOpenAI(DEFAULTS.useOpenAI);
     toast({ title: "Zurückgesetzt", description: "Standardwerte wiederhergestellt." });
   };
@@ -389,60 +474,73 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
       return;
     }
 
-    // OpenAI disabled or no key — show references only
-    if (!useOpenAI || !apiKey.trim()) {
+    if (refsOnly) {
       const refs = pickRandomVerses(chapters, count);
       setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
       return;
     }
 
-    localStorage.setItem(STORAGE_KEY, apiKey);
-    setLoading(true);
-    setVerses(null);
+    const bollsCode = BOLLS_CODES[translation];
+    const aiEnabled = useOpenAI && !!apiKey.trim();
 
-    let prompt: string;
-    if (topic.trim()) {
-      const scope = buildScopeDescription(scopeMode, presets, selections);
-      prompt = `Wähle ${count} Bibelvers${count > 1 ? "e" : ""} aus ${scope}, die inhaltlich gut zum Thema „${topic.trim()}" passen. Verwende die Übersetzung "${translation}". Gib ausschließlich Verse zurück, die wirklich zum Thema passen – lieber weniger als unpassende Verse. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
-    } else {
-      const refs = pickRandomVerses(chapters, count);
-      const refList = refs.map(r => `${r.book} ${r.chapter},${r.verse}`).join("; ");
-      prompt = `Gib mir den genauen Bibeltext dieser Verse in der Übersetzung "${translation}": ${refList}. Falls eine Versangabe nicht exakt stimmt, nimm den nächstgelegenen Vers. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
-    }
-
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "Du bist ein Bibel-Experte. Antworte immer mit gültigem JSON." },
-            { role: "user", content: prompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: topic.trim() ? 0.7 : 0.1,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`OpenAI Fehler: ${res.status} ${err}`);
+    // ── Topic mode (AI required for verse selection) ──────────────────────
+    if (topic.trim() && aiEnabled) {
+      localStorage.setItem(STORAGE_KEY, apiKey);
+      setLoading(true);
+      setVerses(null);
+      try {
+        const scope = buildScopeDescription(scopeMode, presets, selections);
+        const prompt = `Wähle ${count} Bibelvers${count > 1 ? "e" : ""} aus ${scope}, die inhaltlich gut zum Thema „${topic.trim()}" passen. Verwende die Übersetzung "${translation}". Gib ausschließlich Verse zurück, die wirklich zum Thema passen – lieber weniger als unpassende Verse. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+        const aiVerses = await callChatGPT(prompt, apiKey, 0.7);
+        if (bollsCode) {
+          // AI found the references → bolls provides the accurate text
+          const refs = aiVerses.map(v => parseVerseRef(v.reference)).filter(Boolean) as VerseRef[];
+          setVerses(await fetchFromBolls(refs, bollsCode, translation));
+        } else {
+          setVerses(aiVerses.map(v => ({ ...v, fromAI: true })));
+        }
+      } catch (e: unknown) {
+        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Anfrage fehlgeschlagen", variant: "destructive" });
+      } finally {
+        setLoading(false);
       }
-
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || "{}";
-      const parsed = JSON.parse(content);
-      setVerses((parsed.verses as Verse[]) || []);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Anfrage fehlgeschlagen";
-      toast({ title: "Fehler", description: msg, variant: "destructive" });
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    // ── Random mode ───────────────────────────────────────────────────────
+    const refs = pickRandomVerses(chapters, count);
+
+    if (bollsCode) {
+      setLoading(true);
+      setVerses(null);
+      try {
+        setVerses(await fetchFromBolls(refs, bollsCode, translation));
+      } catch {
+        setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (aiEnabled) {
+      localStorage.setItem(STORAGE_KEY, apiKey);
+      setLoading(true);
+      setVerses(null);
+      try {
+        const refList = refs.map(r => `${r.book} ${r.chapter},${r.verse}`).join("; ");
+        const prompt = `Gib mir den genauen Bibeltext dieser Verse in der Übersetzung "${translation}": ${refList}. Falls eine Versangabe nicht exakt stimmt, nimm den nächstgelegenen Vers. Antworte ausschließlich mit JSON im folgenden Format ohne weiteren Text: {"verses": [{"reference": "Buch Kapitel,Vers", "text": "Verstext", "translation": "Übersetzungsname"}]}`;
+        setVerses((await callChatGPT(prompt, apiKey, 0.1)).map(v => ({ ...v, fromAI: true })));
+      } catch (e: unknown) {
+        toast({ title: "Fehler", description: e instanceof Error ? e.message : "Anfrage fehlgeschlagen", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // No bolls, no AI — refs only
+    setVerses(refs.map(r => ({ reference: `${r.book} ${r.chapter},${r.verse}` })));
   };
 
   return (
@@ -580,6 +678,14 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                       </label>
                     ))}
                   </RadioGroup>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">Selbst nachschlagen</p>
+                    <p className="text-xs text-muted-foreground">Zeigt nur Stellenangaben — kein Verstext wird geladen</p>
+                  </div>
+                  <Switch checked={refsOnly} onCheckedChange={setRefsOnly} />
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border p-3">
