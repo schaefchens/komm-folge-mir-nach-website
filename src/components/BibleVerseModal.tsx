@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Loader2, Dices, BookOpen } from "lucide-react";
+import { Plus, Trash2, Loader2, Dices, BookOpen, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BibleVerseModalProps {
@@ -35,6 +35,15 @@ const TRANSLATIONS = [
 ];
 
 const STORAGE_KEY = "openai_api_key";
+const PREFS_KEY = "bible_picker_prefs";
+
+const DEFAULTS = {
+  scopeMode: "whole" as ScopeMode,
+  presets: ["new"] as PresetKey[],
+  selections: [{ id: "default", book: "", chapter: "" }] as BookSelection[],
+  translation: "Elberfelder",
+  count: 1,
+};
 
 type ScopeMode = "whole" | "preset" | "custom";
 type PresetKey = "old" | "new" | "psalms" | "proverbs";
@@ -55,16 +64,48 @@ const PRESET_DESCRIPTION: Record<PresetKey, string> = {
 
 const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
   const { toast } = useToast();
-  const [selections, setSelections] = useState<BookSelection[]>([
-    { id: crypto.randomUUID(), book: "", chapter: "" },
-  ]);
-  const [translation, setTranslation] = useState<string>("Luther");
-  const [scopeMode, setScopeMode] = useState<ScopeMode>("whole");
-  const [preset, setPreset] = useState<PresetKey>("new");
-  const [count, setCount] = useState(5);
+  const loadPrefs = () => {
+    try {
+      const raw = localStorage.getItem(PREFS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
+  const initial = loadPrefs();
+  const [selections, setSelections] = useState<BookSelection[]>(
+    initial?.selections?.length
+      ? initial.selections.map((s: BookSelection) => ({ ...s, id: crypto.randomUUID() }))
+      : [{ id: crypto.randomUUID(), book: "", chapter: "" }],
+  );
+  const [translation, setTranslation] = useState<string>(initial?.translation ?? DEFAULTS.translation);
+  const [scopeMode, setScopeMode] = useState<ScopeMode>(initial?.scopeMode ?? DEFAULTS.scopeMode);
+  const [presets, setPresets] = useState<PresetKey[]>(initial?.presets ?? DEFAULTS.presets);
+  const [count, setCount] = useState<number>(initial?.count ?? DEFAULTS.count);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(STORAGE_KEY) || "");
   const [loading, setLoading] = useState(false);
   const [verses, setVerses] = useState<Verse[] | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ scopeMode, presets, selections, translation, count }),
+    );
+  }, [scopeMode, presets, selections, translation, count]);
+
+  const togglePreset = (k: PresetKey) =>
+    setPresets((cur) => (cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k]));
+
+  const resetDefaults = () => {
+    localStorage.removeItem(PREFS_KEY);
+    setSelections([{ id: crypto.randomUUID(), book: "", chapter: "" }]);
+    setTranslation(DEFAULTS.translation);
+    setScopeMode(DEFAULTS.scopeMode);
+    setPresets(DEFAULTS.presets);
+    setCount(DEFAULTS.count);
+    toast({ title: "Zurückgesetzt", description: "Standardwerte wiederhergestellt." });
+  };
 
   const addSelection = () =>
     setSelections((s) => [...s, { id: crypto.randomUUID(), book: "", chapter: "" }]);
@@ -85,7 +126,11 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
     if (scopeMode === "whole") {
       selectionDescription = "der ganzen Bibel";
     } else if (scopeMode === "preset") {
-      selectionDescription = PRESET_DESCRIPTION[preset];
+      if (presets.length === 0) {
+        toast({ title: "Bereich fehlt", description: "Bitte wähle mindestens einen Bereich.", variant: "destructive" });
+        return;
+      }
+      selectionDescription = presets.map((p) => PRESET_DESCRIPTION[p]).join(", ");
     } else {
       const validSelections = selections.filter((s) => s.book.trim());
       if (validSelections.length === 0) {
@@ -180,11 +225,9 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
                     <div className="grid grid-cols-2 gap-2">
                       {(Object.keys(PRESET_LABELS) as PresetKey[]).map((k) => (
                         <label key={k} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="preset"
-                            checked={preset === k}
-                            onChange={() => setPreset(k)}
+                          <Checkbox
+                            checked={presets.includes(k)}
+                            onCheckedChange={() => togglePreset(k)}
                           />
                           <span className="text-sm">{PRESET_LABELS[k]}</span>
                         </label>
@@ -307,17 +350,22 @@ const BibleVerseModal = ({ open, onOpenChange }: BibleVerseModalProps) => {
               </Button>
             </>
           ) : (
-            <Button onClick={handleSubmit} disabled={loading} className="w-full">
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Würfle Verse...
-                </>
-              ) : (
-                <>
-                  <Dices className="w-4 h-4 mr-2" /> Verse würfeln
-                </>
-              )}
-            </Button>
+            <>
+              <Button variant="outline" onClick={resetDefaults} disabled={loading} title="Auf Standard zurücksetzen">
+                <RotateCcw className="w-4 h-4 mr-1" /> Reset
+              </Button>
+              <Button onClick={handleSubmit} disabled={loading} className="flex-1">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" /> Würfle Verse...
+                  </>
+                ) : (
+                  <>
+                    <Dices className="w-4 h-4 mr-2" /> Verse würfeln
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
       </DialogContent>
