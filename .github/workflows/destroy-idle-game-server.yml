@@ -1,0 +1,15 @@
+name: Destroy idle game server
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  destroy-if-idle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call idle destroy endpoint
+        run: |
+          curl -fsS "https://komm-folge-mir-nach.de/api/fetch-game-server.php?action=destroy-if-idle&key=s3cr3t"
