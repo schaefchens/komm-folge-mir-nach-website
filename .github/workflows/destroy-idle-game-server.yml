@@ -2,23 +2,21 @@ name: Destroy idle game server
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # Every 10 minutes
-  workflow_dispatch:         # Allows manual trigger from Actions tab
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
 jobs:
   destroy-if-idle:
     runs-on: ubuntu-latest
-    
-    # Best practice: limit permissions
+
     permissions:
       contents: read
 
     steps:
       - name: Call idle destroy endpoint
         run: |
-          echo "🕒 Checking for idle game server at $(date -u) UTC"
+          echo "🕒 Checking idle game server at $(date -u) UTC"
           
-          curl -fsSL -w "%{http_code} - %{url_effective}\n" \
-               -H "User-Agent: GitHub-Actions-Destroy-Idle" \
+          curl -fsSL -w "HTTP Status: %{http_code}\n" \
+               -H "User-Agent: GitHub-Actions" \
                "https://komm-folge-mir-nach.de/api/fetch-game-server.php?action=destroy-if-idle&key=${{ secrets.GAME_SERVER_KEY }}"
-        shell: bash
