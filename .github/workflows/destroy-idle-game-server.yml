@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Call idle destroy endpoint
         run: |
-          echo "🕒 Checking idle game server at $(date -u) UTC"
+          echo "🕒 Checking idle game server at $(date -u) UTC..."
           
           curl -fsSL -w "HTTP Status: %{http_code}\n" \
                -H "User-Agent: GitHub-Actions" \
