@@ -171,7 +171,9 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
           if (!isGameButtonExpanded) {
             setIsGameButtonExpanded(true);
           } else {
-            window.location.href = "/game";
+            // old setup where game is on same webhosting: window.location.href = "/game";
+            // we got a own dedicated server for the game now
+            window.location.href = "https://game.komm-folge-mir-nach.de/game/";
           }
         }}
         className="absolute top-[196px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
