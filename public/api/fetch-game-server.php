@@ -35,7 +35,7 @@ $config = [
     'server_name' => 'spirit-game-server',
     'server_type' => 'cpx12',
     'location' => 'fsn1',
-    'image' => 405912200,
+    'image' => 406645289,
     'ssh_key' => 'abraham@der-weg-des-herrn.de',
     'firewall' => 'firewall-spirit-game-server',
 
