@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Deploy credentials (scripts/deploy.sh)
+sftp.env
