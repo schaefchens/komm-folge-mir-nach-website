@@ -121,6 +121,29 @@ fi
 # blank page pointing at bundles that are not there yet.
 add_file dist/index.html index.html
 
+# ─── Guard: never upload a placeholder over a live credential ────────────────
+# The Twilio, SMTP, Hetzner SMS, Hetzner Cloud and PostgreSQL credentials were
+# purged from this repo's history, so the tracked copies of join.php,
+# database.php and fetch-game-server.php now read *_PURGED. The server still
+# runs the real ones.
+#
+# Such a file is dropped from the plan rather than uploaded: the server's copy
+# is the working original, and leaving it untouched is always safer than
+# overwriting a live credential with a redacted one. The cost is that a genuine
+# code change to one of those files will NOT deploy until the real values are
+# restored locally — which is why this says so loudly rather than silently.
+SKIPPED=""
+KEPT=$(mktemp)
+while IFS= read -r line; do
+  f="${line%%	*}"
+  case "$f" in
+    *.php|*.html|*.json|*.js|*.css)
+      if grep -q '_PURGED' "$f" 2>/dev/null; then SKIPPED="$SKIPPED$f"$'\n'; continue; fi ;;
+  esac
+  printf '%s\n' "$line" >> "$KEPT"
+done < "$PLAN"
+mv "$KEPT" "$PLAN"
+
 FILE_COUNT=$(wc -l < "$PLAN" | tr -d ' ')
 BYTES=$(awk -F'\t' '{print $1}' "$PLAN" | xargs -I{} stat -f%z {} 2>/dev/null | awk '{s+=$1} END {print s+0}')
 
@@ -129,6 +152,12 @@ echo "▸ target : $SFTP_SERVER  →  $PUBLIC_URL"
 echo "▸ files  : $FILE_COUNT  ($(echo "scale=1; $BYTES/1048576" | bc) MB)"
 [ "$WITH_CONFIG" = 1 ] && echo "▸ incl.  : api/config/config.php  (overwrites the server's DB credentials!)"
 [ "$WITH_TESTS" = 1 ]  && echo "▸ incl.  : api/ diagnostics (debug.php, test-*.php)"
+if [ -n "$SKIPPED" ]; then
+  echo "▸ SKIPPED: these carry purged-secret placeholders, so the server's working"
+  echo "           copies are left alone. Restore the real values locally to deploy"
+  echo "           code changes to them:"
+  printf '%s' "$SKIPPED" | sed 's|^|             |'
+fi
 echo "▸ never  : questionnaires/<identifier>.json (filled-out questionnaires),"
 echo "           api/spirit-game-*  (game server runtime state),"
 echo "           and anything not listed in the plan"
