@@ -17,6 +17,8 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
   const [isPrayerButtonExpanded, setIsPrayerButtonExpanded] = useState(false);
   const [showBibleModal, setShowBibleModal] = useState(false);
   const [isBibleButtonExpanded, setIsBibleButtonExpanded] = useState(false);
+  const [isQuizButtonExpanded, setIsQuizButtonExpanded] = useState(false);
+  const [isGameButtonExpanded, setIsGameButtonExpanded] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -141,10 +143,28 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Bibelquiz in einem neuen Tab öffnen"
+        onClick={(event) => {
+          if (!isQuizButtonExpanded) {
+            event.preventDefault();
+            setIsQuizButtonExpanded(true);
+          } else {
+            setIsQuizButtonExpanded(false);
+          }
+        }}
         className="absolute top-[152px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
       >
         <HelpCircle className="w-4 h-4 flex-shrink-0" />
-        <span className="whitespace-nowrap">Bibelquiz</span>
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{
+            opacity: isQuizButtonExpanded ? 1 : 0,
+            width: isQuizButtonExpanded ? "auto" : 0
+          }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="whitespace-nowrap"
+        >
+          Bibelquiz
+        </motion.span>
       </motion.a>
 
       {/* External Walk in the Spirit link */}
@@ -156,10 +176,28 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Walk in the Spirit in einem neuen Tab öffnen"
+        onClick={(event) => {
+          if (!isGameButtonExpanded) {
+            event.preventDefault();
+            setIsGameButtonExpanded(true);
+          } else {
+            setIsGameButtonExpanded(false);
+          }
+        }}
         className="absolute top-[196px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
       >
         <Gamepad2 className="w-4 h-4 flex-shrink-0" />
-        <span className="whitespace-nowrap">Walk in the Spirit</span>
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{
+            opacity: isGameButtonExpanded ? 1 : 0,
+            width: isGameButtonExpanded ? "auto" : 0
+          }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="whitespace-nowrap"
+        >
+          Walk in the Spirit
+        </motion.span>
       </motion.a>
 
       {/* Decorative Background Elements */}
