@@ -17,8 +17,6 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
   const [isPrayerButtonExpanded, setIsPrayerButtonExpanded] = useState(false);
   const [showBibleModal, setShowBibleModal] = useState(false);
   const [isBibleButtonExpanded, setIsBibleButtonExpanded] = useState(false);
-  const [isQuizButtonExpanded, setIsQuizButtonExpanded] = useState(false);
-  const [isGameButtonExpanded, setIsGameButtonExpanded] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -134,63 +132,35 @@ const Hero = ({ showJoinButton = false }: HeroProps) => {
         onOpenChange={setShowBibleModal}
       />
 
-      {/* Quiz Button */}
-      <motion.button
+      {/* External Bible quiz link */}
+      <motion.a
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 2.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        onClick={() => {
-          if (!isQuizButtonExpanded) {
-            setIsQuizButtonExpanded(true);
-          } else {
-            window.location.href = "/quiz";
-          }
-        }}
+        href="https://biblequiz.games.schaefchens.de"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Bibelquiz in einem neuen Tab öffnen"
         className="absolute top-[152px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
       >
         <HelpCircle className="w-4 h-4 flex-shrink-0" />
-        <motion.span
-          initial={{ opacity: 0, width: 0 }}
-          animate={{
-            opacity: isQuizButtonExpanded ? 1 : 0,
-            width: isQuizButtonExpanded ? 'auto' : 0
-          }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="whitespace-nowrap"
-        >
-          Quiz
-        </motion.span>
-      </motion.button>
+        <span className="whitespace-nowrap">Bibelquiz</span>
+      </motion.a>
 
-      {/* Game Button */}
-      <motion.button
+      {/* External Walk in the Spirit link */}
+      <motion.a
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 2.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        onClick={() => {
-          if (!isGameButtonExpanded) {
-            setIsGameButtonExpanded(true);
-          } else {
-            // old setup where game is on same webhosting: window.location.href = "/game";
-            // we got a own dedicated server for the game now
-            window.location.href = "https://game.komm-folge-mir-nach.de/game/";
-          }
-        }}
+        href="https://walkinthespirit.games.schaefchens.de"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Walk in the Spirit in einem neuen Tab öffnen"
         className="absolute top-[196px] -right-2 z-20 bg-gradient-warm text-white px-4 py-2 pr-6 rounded-l-full shadow-elegant hover:shadow-hover transition-shadow duration-300 flex items-center gap-2 text-sm font-semibold overflow-hidden"
       >
         <Gamepad2 className="w-4 h-4 flex-shrink-0" />
-        <motion.span
-          initial={{ opacity: 0, width: 0 }}
-          animate={{
-            opacity: isGameButtonExpanded ? 1 : 0,
-            width: isGameButtonExpanded ? 'auto' : 0
-          }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="whitespace-nowrap"
-        >
-          Game
-        </motion.span>
-      </motion.button>
+        <span className="whitespace-nowrap">Walk in the Spirit</span>
+      </motion.a>
 
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 z-0">

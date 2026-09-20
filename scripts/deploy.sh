@@ -15,16 +15,13 @@
 #
 # ─── Why this uses an explicit allow-list ────────────────────────────────────
 # Vite copies public/ verbatim into dist/, so dist/ also holds the *server* side
-# of the project — and two of those directories accumulate live state that only
+# of the project — and one of those directories accumulates live state that only
 # exists on the server:
 #
 #   questionnaires/  the two *_v1.json definitions sit beside one
 #                    <identifier>.json per person who filled the questionnaire
 #                    out (questionaire.php writes them there). Only the two
 #                    definitions are named below; answers are never touched.
-#   api/             fetch-game-server.php writes spirit-game-last-activity.txt
-#                    and spirit-game-server.lock next to itself at runtime.
-#
 # Uploading dist/ wholesale would push a stale local snapshot over that. Nothing
 # is uploaded unless it is named below — and nothing is ever deleted.
 #
@@ -96,7 +93,7 @@ add_file dist/questionaire.php questionaire.php
 # handler, so they go up before the handlers that include them.
 add_file dist/api/config/database.php  api/config/database.php
 add_file dist/api/includes/functions.php api/includes/functions.php
-for f in auth.php prayers.php reactions.php scheduled-calls.php verify.php fetch-game-server.php; do
+for f in auth.php prayers.php reactions.php scheduled-calls.php verify.php; do
   add_file "dist/api/$f" "api/$f"
 done
 
@@ -122,10 +119,9 @@ fi
 add_file dist/index.html index.html
 
 # ─── Guard: never upload a placeholder over a live credential ────────────────
-# The Twilio, SMTP, Hetzner SMS, Hetzner Cloud and PostgreSQL credentials were
-# purged from this repo's history, so the tracked copies of join.php,
-# database.php and fetch-game-server.php now read *_PURGED. The server still
-# runs the real ones.
+# The Twilio, SMTP, Hetzner SMS and PostgreSQL credentials were purged from this
+# repo's history, so the tracked copies of join.php and database.php now read
+# *_PURGED. The server still runs the real ones.
 #
 # Such a file is dropped from the plan rather than uploaded: the server's copy
 # is the working original, and leaving it untouched is always safer than
@@ -158,8 +154,7 @@ if [ -n "$SKIPPED" ]; then
   echo "           code changes to them:"
   printf '%s' "$SKIPPED" | sed 's|^|             |'
 fi
-echo "▸ never  : questionnaires/<identifier>.json (filled-out questionnaires),"
-echo "           api/spirit-game-*  (game server runtime state),"
+echo "▸ never  : questionnaires/<identifier>.json (filled-out questionnaires)"
 echo "           and anything not listed in the plan"
 echo
 
